@@ -15,6 +15,9 @@
 (toggle-menu-bar-mode-from-frame)
 (toggle-tool-bar-mode-from-frame)
 (scroll-bar-mode 0)
+(custom-set-faces
+  '(default ((t (:background "black" :foreground "grey"))))
+  '(fringe ((t (:background "black")))))
 
 
 ;;;; todo: put in seperate files
