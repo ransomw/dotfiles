@@ -9,6 +9,14 @@
 ;(setq x-select-enable-clipboard nil)
 (setq x-select-enable-clipboard t)
 
+;; x-emacs config
+(setq initial-scratch-message "")
+(setq inhibit-startup-message t)
+(toggle-menu-bar-mode-from-frame)
+(toggle-tool-bar-mode-from-frame)
+(scroll-bar-mode 0)
+
+
 ;;;; todo: put in seperate files
 ;;;;;;;;;;;;;recognize haskell pragmas, etc.
 (setq file-auto-mode-ignore
