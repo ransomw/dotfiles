@@ -19,8 +19,8 @@
   '(default ((t (:background "black" :foreground "grey"))))
   '(fringe ((t (:background "black")))))
 
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.json$" . javascript-mode))
-
 
 ;;;; todo: put in seperate files
 ;;;;;;;;;;;;;recognize haskell pragmas, etc.

@@ -1,3 +1,6 @@
+(setq defun-todo-poll
+			(list))
+
 (defun kill-buffer-name (num)
   "appends buffer name to kill ring. defaults to current buffer,
     otherwise, appends the name of (other-window NUM).
@@ -152,3 +155,8 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
           (newalpha (if dec (- oldalpha 10) (+ oldalpha 10))))
     (when (and (>= newalpha frame-alpha-lower-limit) (<= newalpha 100))
       (modify-frame-parameters nil (list (cons 'alpha newalpha))))))
+
+(defun reload-all-file-buffers ()
+	(interactive)
+	(let ((todo-name "reload-all-file-buffers"))
+		(setq defun-todo-poll (cons todo-name defun-todo-poll))))
