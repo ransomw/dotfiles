@@ -3,6 +3,10 @@
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 (setq-default tab-width 2)
+(setq-default indent-tabs-mode nil)
+(setq-default js2-basic-offset 2) ;; js2-mode javascript
+(setq js-indent-level 2) ;; javascript-mode
+(setq css-indent-offset 2)
 (server-start)
 (put 'narrow-to-region 'disabled nil)
 (desktop-save-mode 1)
@@ -23,3 +27,4 @@
 
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.json$" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.less$" . css-mode))

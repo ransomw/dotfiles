@@ -160,3 +160,49 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 	(interactive)
 	(let ((todo-name "reload-all-file-buffers"))
 		(setq defun-todo-poll (cons todo-name defun-todo-poll))))
+
+(defun quote-lines (ask-for-quote?)
+  "add quotation marks around each line of text.
+    prefix arg C-u will allow \"quoting\" with other strings
+    hitting C-u twice will allow a seperate end quote"
+  (interactive "P") ; prefix arg
+  (let ((quote-str
+         (if ask-for-quote?
+             (read-from-minibuffer "quote string: ")
+           "\""))
+        (quote-str-end
+         (if (listp ask-for-quote?)
+             (if (eq (car ask-for-quote?) 16)
+                 (read-from-minibuffer "end quote string: ")))))
+    (replace-regexp
+     "\\(.*\\)"
+     (concat quote-str "\\1"
+             (if quote-str-end
+                 quote-str-end
+               quote-str))))
+  )
+
+;; (use 'figwheel-sidecar.repl-api)
+;; (cljs-repl)
+
+(defun my-cider-connect ()
+  (interactive)
+  (progn
+    (cider-connect "localhost" "7888")
+    (with-current-buffer (cider-current-repl-buffer)
+      (goto-char (point-max))
+      (insert "(require 'figwheel-sidecar.repl-api)
+             (figwheel-sidecar.repl-api/cljs-repl)")
+      (cider-repl-return))
+    ))
+
+(defun insert-js-fn ()
+  (interactive)
+  (let ((start-pt (point-marker)))
+    (insert "function () {\n")
+    (let ((in-fn-pt (point-marker)))
+      (insert "\n};")
+      (let ((end-pt (point-marker)))
+        (indent-region start-pt end-pt)
+        (goto-char (marker-position in-fn-pt))
+        (indent-for-tab-command)))))
