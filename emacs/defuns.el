@@ -206,3 +206,11 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
         (indent-region start-pt end-pt)
         (goto-char (marker-position in-fn-pt))
         (indent-for-tab-command)))))
+
+(defun toggle-js-mode ()
+  (interactive)
+  (let* ((js-mode-cons-cell (assoc "\\.js$" auto-mode-alist))
+         (curr-js-mode (cdr js-mode-cons-cell)))
+    (if (eq curr-js-mode 'js2-mode)
+        (setf (cdr js-mode-cons-cell) 'javascript-mode)
+      (setf (cdr js-mode-cons-cell) 'js2-mode))))
