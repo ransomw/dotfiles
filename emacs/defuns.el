@@ -118,6 +118,24 @@
 			(query-replace region-str repl-txt))))
 
 
+(defun query-replace-to-camel-case ()
+  "convert selected snake case variable to camel case"
+  (interactive)
+  (let* ((beg (region-beginning))
+         (end (region-end))
+         (region-str (buffer-substring beg end))
+         (snake-var-name region-str)
+         (var-words (split-string snake-var-name "[_]"))
+         (first-word (car var-words))
+         (last-words (mapcar 'upcase-initials (cdr var-words)))
+         (camel-var-name (apply 'concat first-word last-words))
+         (repl-txt camel-var-name))
+    (goto-char beg)
+    (deactivate-mark)
+    (save-excursion
+      (query-replace region-str repl-txt))))
+
+
 ;; (defun my-search-replace ()
 ;; 	"""use the first argument of this function
 ;;   to specify one of the (many) available search &/or replace
@@ -161,6 +179,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 	(let ((todo-name "reload-all-file-buffers"))
 		(setq defun-todo-poll (cons todo-name defun-todo-poll))))
 
+;; todo: make-scriptable calls like (quote-lines "{" "}") possible
 (defun quote-lines (ask-for-quote?)
   "add quotation marks around each line of text.
     prefix arg C-u will allow \"quoting\" with other strings
