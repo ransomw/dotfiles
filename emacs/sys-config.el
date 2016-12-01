@@ -13,6 +13,23 @@
 ;(setq x-select-enable-clipboard nil)
 (setq x-select-enable-clipboard t)
 
+(setq cider-cljs-lein-repl
+      "(do (require 'figwheel-sidecar.repl-api)
+           (figwheel-sidecar.repl-api/start-figwheel!)
+           (figwheel-sidecar.repl-api/cljs-repl))")
+
+;; (define-clojure-indent
+;;   ;; compojure
+;;   (defroutes 'defun)
+;;   (GET 2)
+;;   (POST 2)
+;;   (PUT 2)
+;;   (DELETE 2)
+;;   (HEAD 2)
+;;   (ANY 2)
+;;   (context 2)
+;;   )
+
 ;; x-emacs config
 (setq initial-scratch-message "")
 (setq inhibit-startup-message t)
@@ -32,4 +49,4 @@
 (add-to-list 'auto-mode-alist '("\\.rs$" . rust-mode))
 (add-to-list 'auto-mode-alist '("\\.hbs$" . html-mode))
 (add-to-list 'auto-mode-alist '("\\.rt$" . html-mode))
-
+(add-to-list 'auto-mode-alist '("\\.purs$" . haskell-mode))
