@@ -18,14 +18,20 @@
   (interactive)
   (kill-new (read-from-minibuffer "append to kill ring: ") nil))
 
+(defun remove-first-from-assoc-list (key assoc-list)
+  (let ((first-assoc-cell (assoc key assoc-list)))
+    (if first-assoc-cell
+        (remove first-assoc-cell assoc-list)
+      assoc-list)))
+
 (setq abbrev-list ())
 (defun add-abbreviation ()
   (interactive)
   (let ((abbrev (read-from-minibuffer "abbreviation: "))
         (val (read-from-minibuffer "for string: ")))
-    (if (assoc abbrev abbrev-list)
-        (remove (assoc abbrev abbrev-list) abbrev-list))
-    (setq abbrev-list (cons (cons abbrev val) abbrev-list))
+    (setq abbrev-list
+          (cons (cons abbrev val)
+                (remove-first-from-assoc-list abbrev abbrev-list)))
     (print abbrev)))
 
 ;; todo: popup new buffer and hit enter on some abbre

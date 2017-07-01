@@ -1,0 +1,5 @@
+* abbreviations
+  - store (in desktop or elsewhere)
+  - remove duplicates (w/ warning confirmation)
+* standardjs setup and defun to toggle between jslint and standardjs
+  `(setf (cdr (rassoc 'javascript-mode auto-mode-alist)) 'js2-mode)`
