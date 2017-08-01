@@ -1,0 +1,120 @@
+# mbsync applies some (think "familiar") metaphors to
+# email delivery.
+# - (CSP) channels
+# - (git) push/pull
+#
+# misc. notes:
+#
+# ~ for the Gmail setup, it's necessary to use a webui
+#   in order to disable non-email-specific auth methods
+# ~ INBOX is NOT relative to Path for maildir (file-system)
+#
+############################################################
+
+### globals ##
+
+BufferLimit 10M # default
+
+### accounts ##
+
+## gmail
+
+IMAPAccount "gmail"
+Host imap.gmail.com
+# SSLType -> defaults IMAPS |-> 993 IMAP |-> 143
+Port 993
+## modify this to be your gmail username
+User auvergnerw
+####### password input options
+#### prompt for password
+## the silent '-s' is not recognized by dash via mbsync
+# PassCmd +"read -s -p 'gmail password: ' PASS && echo -n $PASS"
+# PassCmd +"read -p 'gmail password: ' PASS && echo -n $PASS"
+## this attempt to hide password doesn't work with mbsync
+# PassCmd +"echo -n 'gmail password: ' && stty_orig=`stty -g` && stty -echo && read PASS && stty $stty_orig && echo -n $PASS"
+#### read from file
+## modify path as necessary.  file should _not_ contain a newline.
+PassCmd "cat ~/.gmailpass"
+#######
+AuthMechs LOGIN # default * # glob depends on SSLType
+SSLType IMAPS # default STARTTLS
+# error strings from openssl if set contrary to system deps
+SSLVersions TLSv1 # default TLSv1 # SSLv2 | "strongly discourged" # SSLv3
+SystemCertificates no # default yes
+CertificateFile /usr/share/ca-certificates/mozilla/Equifax_Secure_CA.crt
+
+############################################################
+
+### stores ##
+
+## file-system
+
+MaildirStore "source"
+Path "~/mail/mbsync/in"
+INBOX "~/mail/mbsync/in/Inbox"
+
+# # date filtered .. use MaxMessages in chan
+# MaildirStore "recent"
+# Path "~/mail/mbsync/recent"
+
+# # noise filtered
+# Path "~/Mail/mbsync/quiet"
+
+# -- sink
+
+# -- mua aggregator
+
+MaildirStore "neomutt"
+Path "~/Mail/mbsync/mutt"
+INBOX "~/Mail/mbsync/mutt/Inbox"
+Flatten .
+Trash "Trash" # for unidirectional flow
+
+MaildirStore "alpine"
+Path "~/mail/pine/mbsync/"
+INBOX "~/mail/pine/mbsync/Inbox"
+Trash "Trash" # for unidirectional flow
+
+# # defaults
+# TrashRemoteNew no
+
+## elsewhere
+
+# inbox (all messages)
+IMAPStore "source-gmail"
+Account "gmail"
+# INBOX -- # implicit (configured server-side)
+Path "[Gmail]" # configured server-side
+### for gmail, perhaps
+# "[Gmail]/All Mail"
+# "[Gmail]/Sent Mail"
+# "[Gmail]/Starred"
+Flatten .
+
+############################################################
+
+### channels ##
+
+# grab inital state from the remote
+Channel "gmail-clone"
+Master :source-gmail: # :<store_name>:INBOX
+Slave :source:gmail:
+Sync Pull
+Create Slave
+CopyArrivalDate Yes
+
+# pull state changes from remote
+Channel "gmail-fetch"
+Master :source-gmail:
+Slave :source:gmail:
+Sync PullNew
+
+### groups # keyboard shortcuts
+Group "init"
+Channel gmail-clone
+# .
+# .
+# .
+
+Group "get"
+Channel gmail-fetch

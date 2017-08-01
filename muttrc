@@ -1,0 +1,79 @@
+set editor=emacsclient
+
+set spoolfile=~/mail/mbsync/ingmail:
+
+set from=auvergnerw@gmail.com
+set realname='Ransom Williams'
+set smtp_url=smtps://auvergnerw:gccorinna@smtp.gmail.com
+
+set move=no
+
+# email addresses to skim for deletion
+alternates -group nope digest-noreply@quora.com \
+info@twitter.com \
+info@e.twitter.com \
+notify@twitter.com \
+info@meetup.com \
+newsletter@mailer.infoq.com \
+industry-notices@mailer.infoq.com \
+no-reply@mail.goodreads.com \
+news@shop.kobo.com \
+jobs-listings@linkedin.com \
+jobs-noreply@linkedin.com \
+messages-noreply@linkedin.com \
+notifications-noreply@linkedin.com \
+invitations@linkedin.com \
+groups-noreply@linkedin.com \
+noreply@glassdoor.com \
+info@email.glassdoor.com \
+info@mail.glassdoor.com \
+career@recruitment.51job.com \
+updates@email.americanapparel.net \
+noreply-google-plus@google.com \
+news-googleplay@google.com \
+info@mail.chroniclevitae.com \
+info@alumni.caltech.edu \
+caltechfund@caltech.edu \
+president@caltech.edu \
+reunion@alumni.caltech.edu \
+campaign@caltech.edu \
+events@alumni.caltech.edu \
+listmanager@millcomputing.com \
+Mozilla@e.mozilla.org \
+email@email.KPCU.com \
+info@cusocal.org \
+no-reply@orders.pizzahut.com \
+hal@codeschool.com \
+support@hackerrank.com \
+support@udacity.com \
+contact@eatthismuch.com \
+comms@email.symantec.com \
+teamtwilio@twilio.com \
+teamtwilio@team.twilio.com \
+news@twilio.com \
+newsletters@giftbasketsoverseas.com \
+allpostersemail@em.allposters.com \
+noreply@qemailserver.com \
+noreply@mailer.bitbucket.org \
+libraryaware.com \
+offers@jiffylube-offers.com \
+news@email.asana.com \
+headline@newsletter.douban.com \
+product@news.digitalocean.com \
+talent@angel.co \
+team@angel.co \
+no-reply@announcements.soundcloud.com \
+notifications@soundcloudmail.com \
+email@et.uber.com \
+no.reply@web.roberthalftechnology.com \
+LocalDeals@amazon.com
+
+alternates -group nope -rx @schoolonwheels.org$
+alternates -group nope -rx @hopeofthevalley.org$
+alternates -group nope -rx @Neotechnology.com$
+alternates -group nope -rx @inmomentfeedback.com$
+alternates -group nope -rx @innovate.ms$
+alternates -group nope -rx ^noreply-[a-z0-9]+@plus.google.com$
+alternates -group nope -rx @feedback.satmetrix.com$
+
+alternates -group me auvergnerw@gmail.com
