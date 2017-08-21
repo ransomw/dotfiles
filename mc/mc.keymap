@@ -1,0 +1,11 @@
+# -*-conf-*-
+## see also /etc/mc/mc.keymap
+[main]
+# although multiple keymap files are loaded, there's no "cascading"
+# of existing keybinds, so be sure to include pre-existing
+# if they're still to apply
+Copy = f5; alt-d
+Move = f6; alt-f
+Delete = f8; alt-k
+Menu = f9; alt-m
+Quit = f10; alt-q
