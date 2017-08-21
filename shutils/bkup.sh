@@ -1,8 +1,12 @@
 #! /bin/sh
 
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+
 BKUP_TIME=`date +%y%m%d-%H%M`
-BKUP_MEDIA=/media/blk
-BKUP_DIR=$BKUP_MEDIA/bkup
+BKUP_MEDIA=/media/passport
+
+BKUP_DIR_UNISON=$BKUP_MEDIA/files/bkup/unison
+BKUP_DIR_GIT_REPOS="$BKUP_MEDIA/files/bkup/stardate$BKUP_TIME"
 
 # mount backup media
 if ! cat /etc/mtab | cut -d" " -f 2 | grep -q $BKUP_MEDIA
@@ -13,26 +17,45 @@ then
 		fi
 fi
 
-anki_bkup ()
+unison_local_bkup ()
 {
-		cp -r /home/ransom/Anki $BKUP_DIR/anki/$BKUP_TIME
-}
-notepad_bkup ()
-{
-		cp /home/ransom/documents/notepad.txt $BKUP_DIR/notepad/$BKUP_TIME.txt
-}
-config_bkup ()
-{
-		cp -r /home/ransom/config/ \
-				$BKUP_DIR/config/$BKUP_TIME
+    for path_bkup in $(cat "$SCRIPT_DIR/paths_unison_dirs")
+    do
+        unison $HOME $BKUP_DIR_UNISON -path $path_bkup
+    done
 }
 
+git_local_bkup ()
+{
+    if [ ! -d $BKUP_DIR_GIT_REPOS ]
+    then
+        mkdir $BKUP_DIR_GIT_REPOS
+    fi
 
-anki_bkup
-notepad_bkup
-config_bkup
+    for path_src in $(cat "$SCRIPT_DIR/paths_git_repos")
+    do
+        echo "backing up $path_src ..."
+        path_dest="$BKUP_DIR_GIT_REPOS/$(basename $path_src)"
+        git clone $path_src $path_dest
+        (
+            cd $path_dest
+            for branch in $(git branch -a | \
+                                grep remotes/origin | \
+                                sed 's/\ \ remotes\/origin\///' | \
+                                grep -v "^HEAD")
+            do
+                git checkout $branch
+            done
+        )
+    done
+}
+
+unison_local_bkup
+git_local_bkup
 
 echo "total disk usage after backup"
 df | grep "$BKUP_MEDIA$" | tr -s ' ' | cut -d" " -f 5
+
+exit 0
 
 umount $BKUP_MEDIA
