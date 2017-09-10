@@ -47,6 +47,9 @@ git_local_bkup ()
                 git checkout $branch
             done
         )
+        if [ -f "$path_src/TODO.org" ]; then
+            cp "$path_src/TODO.org" $path_dest
+        fi
     done
 }
 

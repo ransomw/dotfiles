@@ -1,6 +1,11 @@
 alias mpv='mpv --volume-max=250'
+alias mpvvn='mpv -vid no --volume-max=250'
 alias texdoc='PDFVIEWER=zathura texdoc'
 # serve directory
 alias sd='python -m http.server 3003'
 alias l='less'
 alias m='mbsync get && mutt'
+alias pyhtmldoc='elinks /usr/share/doc/python3/html/index.html'
+alias pipprune='pip freeze | grep -Fvx -f requirements.txt - | xargs pip uninstall -y'
+alias dashbd='watch -n 60 "acpi ; TZ=America\/Los_Angeles date"'
+alias hangups='hangups --col-scheme solarized-dark --key-prev-tab "ctrl p" --key-menu "ctrl o" --key-next-tab "ctrl n"'

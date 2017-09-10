@@ -1,4 +1,8 @@
 *~
+*.pyc
+__pycache__/
 
-shutils/paths_git_repos
-shutils/paths_unison_dirs
+/shutils/paths_git_repos
+/shutils/paths_unison_dirs
+
+/pyutils/s_wifi/wpa_supplicant.conf

@@ -10,6 +10,7 @@
 (global-set-key (kbd "C-c e") 'recursive-edit)
 (global-set-key (kbd "C-c p") 'shell)
 (global-set-key (kbd "C-c f") 'shell)
+(global-set-key (kbd "C-c q") 'rename-buffer)
 
 (global-set-key (kbd "C-}") 'forward-page)
 (global-set-key (kbd "C-{") 'backward-page)

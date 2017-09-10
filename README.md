@@ -420,3 +420,107 @@ where is a newline-delimited list
   [`git`](https://git-scm.com/book/en/v2) repositories
 
 i use it backup files from my laptop to an external harddrive.
+
+## Devil's Pie
+
+[`devilspie2`](http://www.gusnan.se/devilspie2/)
+is specific to Xlib, a layer near the bottom of most
+GNU/linux windowing environments, so this § can be
+skipped if you're running OS X.
+
+my main use-case for my `devilspie2` is repositioning
+windows to different desktops:
+new windows pretty much always open on the current desktop,
+and sometimes i'd like to shuffle certain windows off to
+a different desktop.
+for example, if i'm editing a
+[LaTeX](https://en.wikipedia.org/wiki/LaTeX)
+document on one desktop with
+[`entr`](http://entrproject.org/)
+set to rebuild a `*.pdf` file and open it in a viewer
+every time i press "save" while editing the `*.tex` file,
+i'll probably want to check the PDF viewer every once in
+a while, but i don't want it continually stealing focus
+from the editor.
+`devilspie2` can automatically move the PDF viewer to a
+particular desktop each time it opens.
+
+### the dotfiles
+
+i usually run
+
+```shell
+devilspie2 --debug --folder ...dotfiles/devilspie2/scripts
+```
+
+so that it's not necessary to copy or link the dotfiles
+
+### notes
+
+`devilspie2` depends on `glib`, which i'm not too happy about.
+[`kpie`](https://github.com/skx/kpie)
+is an alternative, but i haven't looked into it in any depth.
+
+## Python utilities
+
+when shell scripting is not enough, sensible people turn to Perl.
+i've gravitated toward Python, even though it's heavier,
+because i find myself writing in it a lot for applications
+like web-development where the ecosystem of libraries is helpful.
+so it's more convenient for me to transition between working on
+projects and making "quick" updates to these scripts without a
+Burroughesian भाषा 换.
+
+to use these, i add
+
+```shell
+export PYTHONPATH=$PYTHONPATH:/path/to.../.dotfiles/pyutils
+```
+
+to `.bashrc`, `.profile`, or the equivalent
+(see the above [§](#shell) on using the shell language).
+then, the `-m`-for-module flag to the python interpreter
+can be used to run any of the given utilities
+from the shell.  for example,
+
+```shell
+python -m s_wifi --help
+```
+
+i'm currently running these scripts with Python `3.5.3`.
+on some systems, that interperter might be named `python3`,
+where the unadorned `python` program refers to Python `2.7.x`.
+these scripts are _not_ compatible with Python 2 — onwards!
+
+##### `s_wifi` — [it was supposed to be] simple wifi
+
+these scripts are specific to GNU/Linux.
+
+i used the `wicd` for some time to connect to wireless networks.
+however, i consistently had
+[difficulties](https://gist.github.com/ransomw/57bc3891194db89996bf73335ab17be4)
+with open networks that require a web-based login after connect
+(aka capture ports).
+since i would wind up stopping `wicd` and running several C programs
+(`iw`, `dhclient`, `wpa_supplicant`)
+for situations where `wicd` had difficulty connecting,
+i eventually stopped using the program altogether, even though
+the functionality was great when it ran smoothly.
+
+`s`-for-simple`_wifi` is a wrapper around some typical "workflows"
+of these programs, complicated enough to automate out the tedium,
+easier to reason about that a split-process model, and with the
+arguable virtue of not bringing any sort of GUI into the
+
+> what networks are around?
+
+> what's the password?
+
+> am i online yet?
+
+QA.
+
+since there's not a separate daemonized process to run under a user
+account with appropriate permissions,
+i **run `s_wifi` as root**
+(and nothing has caught on fire — yet).
