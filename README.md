@@ -1,4 +1,7 @@
 # dotfiles
+
+![strange](doc/img/strange.gif)
+
 ## or, how i learned to stop worrying and write documenation
 
 so-called "dotfiles" are config files for various programs,
@@ -420,6 +423,22 @@ where is a newline-delimited list
   [`git`](https://git-scm.com/book/en/v2) repositories
 
 i use it backup files from my laptop to an external harddrive.
+
+##### `gifmaker.sh`
+
+as used to create the image at the top of this readme,
+
+```shell
+./gifmaker.sh -p 50 -s 1:32:55 -e 17 -v ~/video/strange.mp4 ~/tmp/strange.gif
+```
+
+creates a clip of
+[Dr. Strangelove](https://en.wikipedia.org/wiki/Dr._Strangelove)
+scaled to 50% of the original video size,
+starting 1 hour 32 min 55 seconds in,
+with verbose script output,
+[seventeen seconds](https://en.wikipedia.org/wiki/Seventeen_Seconds)
+in length.
 
 ## Devil's Pie
 
