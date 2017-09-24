@@ -50,7 +50,7 @@ CertificateFile /usr/share/ca-certificates/mozilla/Equifax_Secure_CA.crt
 ## file-system
 
 MaildirStore "source"
-Path "~/mail/mbsync/in"
+Path "~/mail/mbsync/in/"
 INBOX "~/mail/mbsync/in/Inbox"
 
 # # date filtered .. use MaxMessages in chan
@@ -65,8 +65,8 @@ INBOX "~/mail/mbsync/in/Inbox"
 # -- mua aggregator
 
 MaildirStore "neomutt"
-Path "~/Mail/mbsync/mutt"
-INBOX "~/Mail/mbsync/mutt/Inbox"
+Path "~/mail/mutt/"
+INBOX "~/mail/mutt/Inbox"
 Flatten .
 Trash "Trash" # for unidirectional flow
 
@@ -84,12 +84,17 @@ Trash "Trash" # for unidirectional flow
 IMAPStore "source-gmail"
 Account "gmail"
 # INBOX -- # implicit (configured server-side)
-Path "[Gmail]" # configured server-side
+# Path "[Gmail]" # configured server-side
 ### for gmail, perhaps
 # "[Gmail]/All Mail"
 # "[Gmail]/Sent Mail"
 # "[Gmail]/Starred"
 Flatten .
+
+IMAPStore "source-gmail-sent"
+Account "gmail"
+# Path "[Gmail]/Sent Mail"
+# Flatten .
 
 ############################################################
 
@@ -97,24 +102,68 @@ Flatten .
 
 # grab inital state from the remote
 Channel "gmail-clone"
-Master :source-gmail: # :<store_name>:INBOX
-Slave :source:gmail:
+Master ":source-gmail:INBOX"
+Slave :source:
+Sync Pull
+Create Slave
+CopyArrivalDate Yes
+
+Channel "gmail-clone-sent"
+Master :source-gmail-sent:"[Gmail]/Sent Mail"
+Slave :source:sent
+Sync Pull
+Create Slave
+CopyArrivalDate Yes
+
+Channel "mutt-clone"
+Master :source:
+Slave :neomutt:
+Sync Pull
+Create Slave
+CopyArrivalDate Yes
+
+Channel "mutt-clone-sent"
+Master :source:sent
+Slave :neomutt:
 Sync Pull
 Create Slave
 CopyArrivalDate Yes
 
 # pull state changes from remote
 Channel "gmail-fetch"
-Master :source-gmail:
-Slave :source:gmail:
+Master ":source-gmail:INBOX"
+Slave :source:
+Sync PullNew
+
+Channel "gmail-fetch-sent"
+Master :source-gmail-sent:"[Gmail]/Sent Mail"
+Slave :source:sent
+Sync PullNew
+
+Channel "mutt-fetch"
+Master :source:
+Slave :neomutt:
+Sync PullNew
+
+Channel "mutt-fetch-sent"
+Master :source:sent
+Slave :neomutt:
 Sync PullNew
 
 ### groups # keyboard shortcuts
 Group "init"
 Channel gmail-clone
+Channel gmail-clone-sent
 # .
 # .
 # .
 
+Group "init-mutt"
+Channel mutt-clone
+Channel mutt-clone-sent
+
 Group "get"
 Channel gmail-fetch
+Channel gmail-fetch-sent
+Channel mutt-fetch
+Channel mutt-fetch-sent

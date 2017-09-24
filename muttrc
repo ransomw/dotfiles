@@ -1,6 +1,6 @@
 set editor=emacsclient
 
-set spoolfile=~/mail/mbsync/ingmail:
+set spoolfile=~/mail/mutt/Inbox
 
 set from=auvergnerw@gmail.com
 set realname='Ransom Williams'
@@ -66,7 +66,8 @@ no-reply@announcements.soundcloud.com \
 notifications@soundcloudmail.com \
 email@et.uber.com \
 no.reply@web.roberthalftechnology.com \
-LocalDeals@amazon.com
+LocalDeals@amazon.com \
+no-reply@slack.com
 
 alternates -group nope -rx @schoolonwheels.org$
 alternates -group nope -rx @hopeofthevalley.org$

@@ -440,6 +440,60 @@ with verbose script output,
 [seventeen seconds](https://en.wikipedia.org/wiki/Seventeen_Seconds)
 in length.
 
+## tmux
+
+##### it really does make perfect sense
+
+now that we have some flavor for how useful a shell language can be
+for automating the use of other programs, it's worth considering the
+program that allows us to use the shell:  the terminal.
+
+[back in the day](https://en.wikipedia.org/wiki/VT100),
+there were actually physical terminals —
+rather than getting a computer that could be attached to a
+screen, mouse, keyboard, usb game controller, bluetooth headset,
+or whathaveyou, there would be a box that plugged into the computer
+with a screen a keyboard and that'd provide the entire user interface.
+
+today, the program that runs a shell in a modern windowing enviroment
+on a POSIX system still behaves like one of these terminal boxes.
+the system provides an abstraction called a _pseudoterminal_ that
+mimics the wire that used to run between real terminal hardware and
+the computer.  when you open up a terminal program, it creates one
+of these "virtual wires" and attaches to it.
+even though communication happens entirely in software,
+there's still a wire protocol sending 1's and 0's between
+the system and the terminal (virtual or otherwise).
+
+terminal multiplexers like `tmux` and `screen` further leverage
+pseudoterminals to decouple terminal sessions from the windowing
+environment entirely.  instead of connecting the pseudoterminal
+directly to a particular window, they're separate programs that
+help organize your bundle of pseudoterminal wires.  with `tmux`,
+there's no need to open up tons of terminal windows, because `tmux`
+can communicate with the operating system via lots of different
+pseudoterminals, and one terminal window (with its single corresponding
+pseudoterminal) is sufficient to communicate with `tmux`.
+
+also, `tmux` can run in the background a keep a bunch of shells
+(and their corresponding processes) open without any terminal
+windows open at all.
+
+### the conf file
+
+by default, `tmux` looks for its local configuration file at
+`~/.tmux.conf`.  alternately, you can pass a path to the
+`source-file` command by typing
+
+```
+[prefix] :source-file <path> [Return]
+```
+
+where `[prefix]` is the prefix key, the single key that preceeds
+any input recognized by `tmux`.  by default it's `C-b` (`Ctrl`+`b`),
+and the config file in this repo rebinds it to an `emacs`-like
+`C-x`.
+
 ## Devil's Pie
 
 [`devilspie2`](http://www.gusnan.se/devilspie2/)
