@@ -6,3 +6,4 @@ __pycache__/
 /shutils/paths_unison_dirs
 
 /pyutils/s_wifi/wpa_supplicant.conf
+/pyutils/s_wifi/networks.conf

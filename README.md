@@ -440,6 +440,42 @@ with verbose script output,
 [seventeen seconds](https://en.wikipedia.org/wiki/Seventeen_Seconds)
 in length.
 
+##### `add_text.sh`
+
+originally written to create the stimuli placeholders for
+[emo-mcg](http://github.com/ransomw/emo-mcg),
+this script draws a text caption on top of a video clip.
+
+for example,
+
+```shell
+./shutils/add_text.sh -s 12 mor-iced-tea.mp4 "mor tea?" another.mp4
+```
+
+adds the caption "mor tea?" with font-size `12` to
+[the sea captain commerical](https://raw.githubusercontent.com/ransomw/clj-demos/master/setsail/resources/assets/demo/vid/mor-iced-tea.mp4).
+
+##### `latex_cts_build.sh`
+
+this script builds and displays a
+[LaTeX](https://en.wikipedia.org/wiki/LaTeX)
+pdf document on whenever the `.tex` source files are saved.
+it's a wrapper around
+[`entr`](http://entrproject.org/)
+and
+[`lualatex`](http://luatex.org/),
+the successor to `pdflatex`,
+so both of these programs need to be installed.
+
+for example, while editing `folland.tex`
+and other `.tex` files in the `folland/` directory of
+[the samizdat](http://github.com/ransomw/samizdat),
+i run
+
+```shell
+samizdat$ PDFVIEWER=zathura latex_cts_build.sh folland
+```
+
 ## tmux
 
 ##### it really does make perfect sense
@@ -506,29 +542,53 @@ windows to different desktops:
 new windows pretty much always open on the current desktop,
 and sometimes i'd like to shuffle certain windows off to
 a different desktop.
-for example, if i'm editing a
-[LaTeX](https://en.wikipedia.org/wiki/LaTeX)
-document on one desktop with
-[`entr`](http://entrproject.org/)
-set to rebuild a `*.pdf` file and open it in a viewer
-every time i press "save" while editing the `*.tex` file,
-i'll probably want to check the PDF viewer every once in
-a while, but i don't want it continually stealing focus
-from the editor.
+this is useful with the `latex_cts_build.sh`
+[shell script](#shell-scripts),
+for example,
+because although i usually want to check the PDF viewer
+every once in a while,
+i don't want it continually stealing focus from the editor.
 `devilspie2` can automatically move the PDF viewer to a
 particular desktop each time it opens.
 
 ### the dotfiles
 
-i usually run
+`devilspie2` is configured via an embedded
+[Lua](http://www.lua.org)
+interpreter.
+(check out
+[`lleaves`](https://github.com/ransomw/exercises/tree/master/lleaves)
+for some examples of this scripting language.)
+specifically, it's given the path of a directory as a parameter,
+and it runs every `.lua` script in that directory in [lexicographic]
+order.
+
+every `.lua` script in `devilspie/scripts` is prefixed by a
+"priority", a two-digit number between `00` and `99`,
+so that for instance, `00_debug.lua` runs before any other
+Lua script.
+
+additionally, the `devilspie/run_devilspie.sh` wrapper in this
+repository may be used to omit Lua scripts above a given priority.
+it creates a temporary directory,
+copies over the desired Lua scripts,
+and starts up `devilspie2`.  for instance,
 
 ```shell
-devilspie2 --debug --folder ...dotfiles/devilspie2/scripts
+run_devilspie.sh -d -p 5
 ```
 
-so that it's not necessary to copy or link the dotfiles
+will run every script with a priority of `05` or lower
+and additionally print debug information.
 
 ### notes
+
+i view the notion of "priority" as something like
+[SysV init](https://en.wikipedia.org/wiki/Init#SysV-style)
+`rc`-levels.
+although i'm not sure if it's an appropriate metaphor
+for this situtation,
+it's the hack i'm currently running with 💔.
 
 `devilspie2` depends on `glib`, which i'm not too happy about.
 [`kpie`](https://github.com/skx/kpie)

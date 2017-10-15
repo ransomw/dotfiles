@@ -52,4 +52,3 @@
 (add-to-list 'auto-mode-alist '("\\.hbs$" . html-mode))
 (add-to-list 'auto-mode-alist '("\\.rt$" . html-mode))
 (add-to-list 'auto-mode-alist '("\\.purs$" . haskell-mode))
-

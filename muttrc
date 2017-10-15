@@ -4,7 +4,7 @@ set spoolfile=~/mail/mutt/Inbox
 
 set from=auvergnerw@gmail.com
 set realname='Ransom Williams'
-set smtp_url=smtps://auvergnerw:gccorinna@smtp.gmail.com
+set smtp_url=smtps://auvergnerw:`cat ~/.gmailpass`@smtp.gmail.com
 
 set move=no
 

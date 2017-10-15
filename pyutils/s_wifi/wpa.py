@@ -7,11 +7,14 @@ import os.path
 import re
 import subprocess
 import datetime
+import queue
 from warnings import warn
 from selectors import DefaultSelector
 from selectors import EVENT_READ
 from enum import Enum
 from enum import unique
+from queue import Queue
+from threading import Thread
 
 from .subps_util import run
 
@@ -54,34 +57,42 @@ class WpaData(dict):
         self['ctrl_event_params'] = params_dict
 
 
+def _queue_up_lines(readline_obj, some_queue):
+    for line in iter(readline_obj.readline, b''):
+        some_queue.put(line)
+
+
 class WpaBuffer:
     """
     buffered data reading of wpa_supplicant
     """
 
-    SELECT_TIMEOUT = 0.5 # seconds
+    DEQUEUE_TIMEOUT = 0.5 # seconds
 
     def __init__(self, file_obj):
         self._data_raw = []
         self._data = []
         self._file_obj = file_obj
-        self._selector = DefaultSelector()
-        self._selector.register(self._file_obj, EVENT_READ, data=self)
+        self._lines_queue = Queue()
+        self._reader_thread = Thread(
+            target=_queue_up_lines,
+            args=(file_obj,
+                      self._lines_queue))
+        # die with program
+        self._reader_thread.daemon
+        self._reader_thread.start()
 
     def read_new(self):
         """ read one one message from wpa_supplicant """
-        events = self._selector.select(timeout=self.SELECT_TIMEOUT)
-        for selectorKey, eventType in events:
-            if selectorKey.data is not self:
-                warn("unexpected event")
-                continue
-            assert selectorKey.fileobj is self._file_obj
-            new_line = self._file_obj.readline().strip()
+        try:
+            new_line = self._lines_queue.get(
+                timeout=self.DEQUEUE_TIMEOUT)
             self._data_raw.append(new_line)
             new_data = WpaData(new_line)
             self._data.append(new_data)
             return new_data, new_line
-        return None, None
+        except queue.Empty:
+            return None, None
 
     def read_all(self):
         """ read all currently available messages """
@@ -113,7 +124,8 @@ class WpaProc:
         'wpa_supplicant.conf')
 
     def __init__(self, ssid, password,
-                     interface='wlan0'):
+                     interface='wlan0',
+                     print_raw=False):
         # encrypt password
         str_conf = (run(
             ['wpa_passphrase', ssid, password])
@@ -130,6 +142,7 @@ class WpaProc:
             bufsize=1,
         )
         self._buffer = WpaBuffer(self._popen.stdout)
+        self._print_raw = print_raw
 
     def poll(self):
         return self._popen.poll()
@@ -147,6 +160,8 @@ class WpaProc:
                 warn("current state lookup timeout")
                 return self.State.UNKNOWN
             new_data, new_line = self._buffer.read_new()
+            if new_line is not None and self._print_raw:
+                print("wpa -- " + new_line)
             if new_data is None:
                 last_data = self._buffer.data[-1]
                 if last_data.get('ctrl_event', None) == 'CONNECTED':

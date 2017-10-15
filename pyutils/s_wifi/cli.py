@@ -26,6 +26,11 @@ def _config_parser_wpa_conn(parser):
         default=10,
         help=("timeout to result in seconds"),
         )
+    parser.add_argument(
+        '--print-raw', dest='print_raw',
+        help=("print raw data from subprocesses"),
+        action="store_true",
+        )
 
 
 def _config_parser_auto_conn(parser):
@@ -34,6 +39,11 @@ def _config_parser_auto_conn(parser):
         type=int,
         default=10,
         help=("timeout to result in seconds"),
+        )
+    parser.add_argument(
+        '--print-raw', dest='print_raw',
+        help=("print raw data from subprocesses"),
+        action="store_true",
         )
 
 
