@@ -18,6 +18,10 @@ if __name__ == '__main__':
     fn.activate(interface=args.interface)
     if args.cmd == 'scan':
         print(fn.run_scan(interface=args.interface))
+    elif args.cmd == 'open':
+        print(fn.open_conn(args.network,
+                               interface=args.interface,
+                               ))
     elif args.cmd == 'wpa':
         conn_gen = fn.wpa_conn(args.network, args.password,
                                    timeout=args.timeout,

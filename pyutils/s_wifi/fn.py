@@ -9,6 +9,7 @@ from . import exc
 from . import networks_conf as nconf
 from .subps_util import run
 from .iw_data import ScanRes
+from .iw_data import ConnectRes
 from .wpa import WpaProc
 
 WPA_POLL_INTERVAL = 2.0 # sec
@@ -28,6 +29,20 @@ def run_scan(interface='wlan0'):
         ['iw', interface, 'scan'])
     assert completed_process_scan.returncode == 0
     return ScanRes(completed_process_scan.stdout.decode('utf-8'))
+
+
+def open_conn(ssid,
+                  interface='wlan0',
+                  ):
+    scan_res = run_scan(interface=interface)
+    completed_process_connect = run(
+        ['iw', 'dev', interface, 'connect', '-w', ssid])
+    assert completed_process_connect.returncode == 0
+    connect_res =  ConnectRes(completed_process_connect
+                                  .stdout.decode('utf-8'))
+    if connect_res.connected:
+        run(['dhclient', '-v'])
+    return connect_res
 
 
 @unique
@@ -57,8 +72,12 @@ def wpa_conn(ssid, password,
             run(['dhclient', '-v'])
             nconf.update(nconf.AuthType.WPA, ssid, password)
             yield ConnState.CONNECTED
-            while (wpa_proc.get_current_state(timeout=timeout) ==
-                       WpaProc.State.CONNECTED):
+            while (wpa_proc.get_current_state(timeout=timeout) in
+                       set([
+                           WpaProc.State.CONNECTED,
+                           # includes non-'CTRL-EVENT-*' states
+                           WpaProc.State.UNKNOWN,
+                           ])):
                 sleep(WPA_POLL_INTERVAL)
         elif curr_wpa_state == WpaProc.State.AUTH_FAIL:
             yield ConnState.AUTH_FAIL
@@ -76,8 +95,11 @@ def auto_conn(
         interface='wlan0',
         print_wpa_raw=False,
     ):
-    present_ssids = [network.ssid for network
-                         in run_scan(interface=interface).networks]
+    present_ssids = set([
+        network.ssid for network
+        in run_scan(interface=interface).networks
+        if network.ssid is not None
+    ])
     found_known_network = False
     for ssid, conf in nconf.get().items():
         if ssid in present_ssids:
