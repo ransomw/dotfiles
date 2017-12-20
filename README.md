@@ -278,12 +278,34 @@ mbsync init
 the first run took a while, and now i can run
 `mbsync get` to quickly backup my email.
 
+##### SSL certificate
+
+it's possible to use an SSL certificate
+(specified by the `CertificateFile` line in `mbsyncrc`)
+shipped with one's system
+in order to establish a secure connection with an remote imap server.
+however, in case the handshake between the imap server (gmail in this
+case) and `mbsync` fails with a system certificate, it could also be
+possible to grab a certificate directly from the server.
+
+this did, in fact, turn out to be the case at one time.
+so i ran
+```shell
+shutils$ ./get_gmail_cert.sh > ~/.gmail.crt
+```
+_once_ and made the corresponding update to `mbsyncrc`
+to start using a valid certificate.
+
 ### mutt
 
 once emails are stored locally,
 i use [(neo)?mutt](https://www.neomutt.org) to make sense of them.
 on my system, the `muttrc` file in this directory is linked to
 `~/.mutt/muttrc`.
+
+note in particular that a few [newline-delimited]
+address and regular-expression lists
+are expected to exist in `~/.config/email/`.
 
 ##### deleting
 

@@ -34,14 +34,14 @@ User auvergnerw
 # PassCmd +"echo -n 'gmail password: ' && stty_orig=`stty -g` && stty -echo && read PASS && stty $stty_orig && echo -n $PASS"
 #### read from file
 ## modify path as necessary.  file should _not_ contain a newline.
-PassCmd "cat ~/.gmailpass"
+PassCmd "cat ~/.config/email/gmailpass"
 #######
 AuthMechs LOGIN # default * # glob depends on SSLType
 SSLType IMAPS # default STARTTLS
 # error strings from openssl if set contrary to system deps
 SSLVersions TLSv1 # default TLSv1 # SSLv2 | "strongly discourged" # SSLv3
 SystemCertificates no # default yes
-CertificateFile /usr/share/ca-certificates/mozilla/Equifax_Secure_CA.crt
+CertificateFile ~/.gmail.crt
 
 ############################################################
 
