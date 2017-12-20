@@ -11,6 +11,13 @@ def _config_parser_scan(parser):
     pass
 
 
+def _config_parser_open_conn(parser):
+    parser.add_argument(
+        'network',
+        help=("name of network (SSID)"),
+        )
+
+
 def _config_parser_wpa_conn(parser):
     parser.add_argument(
         'network',
@@ -63,6 +70,11 @@ def parse_args():
         'scan',
         formatter_class=MyHelpFormatter,
         help=("list networks."),
+    ))
+    _config_parser_open_conn(subParsers.add_parser(
+        'open',
+        formatter_class=MyHelpFormatter,
+        help=("connect to an open network"),
     ))
     _config_parser_wpa_conn(subParsers.add_parser(
         'wpa',
