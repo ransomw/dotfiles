@@ -12,6 +12,7 @@
 (global-set-key (kbd "C-c f") 'shell)
 (global-set-key (kbd "C-c q") 'rename-buffer)
 (global-set-key (kbd "C-c d") 'rainbow-delimiters-mode)
+(global-set-key (kbd "C-c m") 'magit-status)
 
 (global-set-key (kbd "C-}") 'forward-page)
 (global-set-key (kbd "C-{") 'backward-page)

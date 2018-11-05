@@ -31,6 +31,8 @@
 ;;   (context 2)
 ;;   )
 
+(add-hook 'clojure-mode-hook #'enable-paredit-mode)
+
 ;; x-emacs config
 (setq initial-scratch-message "")
 (setq inhibit-startup-message t)
