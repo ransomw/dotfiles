@@ -1,4 +1,4 @@
-import Control.Monad.Trans (liftIO)
+-- import Control.Monad.Trans (liftIO)
 import Control.Monad (liftM)
 import System.Process
 import XMonad

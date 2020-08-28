@@ -1,0 +1,24 @@
+[1]    suspended  vim /etc/devfs.conf
+[2]  - suspended  vim /etc/sysctl.conf
+[3]  + suspended  vim /etc/rc.conf
+sysctl vfs.usermount=1
+pw usermod ransom -g operator
+chmod 660 /dev/da0*
+crw-rw----  1 root  operator  0xa5 May 31 09:44 /dev/da0
+crw-rw----  1 root  operator  0xa6 May 31 09:44 /dev/da0s1
+chown ransom:ransom /media/silver128
+/| mkdir /media/silver128
+> mount -t msdosfs -o -m=644,-M=755 /dev/da0s1 /media/silver128
+[(as username ransom)]
+    see lines with !set token in open files
+
+----
+
+modified /etc/devfs.rules
+
+after reboot,
+chmod 0660 /dev/da0*
+as root and then
+mount_msdosfs /dev/da0s1 /media/silver128
+passes
+
