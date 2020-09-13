@@ -125,11 +125,6 @@ autoload -U colors && colors
 # red or green depending on the last command's exit code.
 PS1='%10>...>'"%(?.%{${fg[green]}%}.%{${fg[red]}%})"'%1/'"%{$reset_color%}"'%>>%# '
 
-# -r is a test for readable files
-if [[ -r ~/.aliasrc ]]; then
-    . ~/.aliasrc
-fi
-
 # `typeset -U` ensures uniqueness of elements in an array:
 # duplicate elements after the first (from the left) are removed
 typeset -U path
@@ -180,6 +175,12 @@ alias unmute='mixer -f /dev/mixer0 vol 85:85'
 alias speaker='mixer -f /dev/mixer0 vol 100:100'
 alias emacs='emacs --no-desktop'
 
+# -r is a test for readable files
+if [[ -r ~/.aliasrc ]]; then
+    . ~/.aliasrc
+fi
+
+
 ## shortcuts
 workspace_dir=ws
 hash -d bkup=/media/bthumb
@@ -192,6 +193,13 @@ hash -d clj_news=~/${workspace_dir}/github/clj-news
 hash -d tub=~/${workspace_dir}/github/tubing
 hash -d exercises=~/${workspace_dir}/github/exercises
 
+if [[ -r ~/.zsh_hashd ]]; then
+    . ~/.zsh_hashd
+fi
+
 ## user-defined path extensions
 export PATH="$HOME/bin:$PATH"
 
+export PLAN9=/usr/home/ransom/sbin/plan9
+export PATH=$PATH:$PLAN9/bin
+alias acme='acme -f $PLAN9/font/fixed/unicode.10x20.font'

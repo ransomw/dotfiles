@@ -18,6 +18,31 @@ BufferLimit 10M # default
 
 ### accounts ##
 
+## fastmail
+IMAPAccount "fastmail"
+Host imap.fastmail.com
+# SSLType -> defaults IMAPS |-> 993 IMAP |-> 143
+Port 993
+## modify this to be your gmail username
+User ransomw@fastmail.com
+####### password input options
+#### prompt for password
+## the silent '-s' is not recognized by dash via mbsync
+# PassCmd +"read -s -p 'gmail password: ' PASS && echo -n $PASS"
+# PassCmd +"read -p 'gmail password: ' PASS && echo -n $PASS"
+## this attempt to hide password doesn't work with mbsync
+# PassCmd +"echo -n 'gmail password: ' && stty_orig=`stty -g` && stty -echo && read PASS && stty $stty_orig && echo -n $PASS"
+#### read from file
+## modify path as necessary.  file should _not_ contain a newline.
+PassCmd "cat ~/.config/email/fastmailpass"
+#######
+AuthMechs LOGIN # default * # glob depends on SSLType
+SSLType IMAPS # default STARTTLS
+# error strings from openssl if set contrary to system deps
+SSLVersions TLSv1 # default TLSv1 # SSLv2 | "strongly discourged" # SSLv3
+SystemCertificates no # default yes
+CertificateFile ~/.fastmail.crt
+
 ## gmail
 
 IMAPAccount "gmail"
@@ -97,6 +122,11 @@ Account "gmail"
 # Path "[Gmail]/Sent Mail"
 # Flatten .
 
+IMAPStore "source-fastmail"
+Account "fastmail"
+Flatten .
+
+
 ############################################################
 
 ### channels ##
@@ -130,6 +160,13 @@ Sync Pull
 Create Slave
 CopyArrivalDate Yes
 
+Channel "fastmail-clone"
+Master ":source-fastmail:INBOX"
+Slave :source:
+Sync Pull
+Create Slave
+CopyArrivalDate Yes
+
 # pull state changes from remote
 Channel "gmail-fetch"
 Master ":source-gmail:INBOX"
@@ -151,6 +188,11 @@ Master :source:sent
 Slave :neomutt:
 Sync PullNew
 
+Channel "fastmail-fetch"
+Master ":source-fastmail:INBOX"
+Slave :source:
+Sync PullNew
+
 ### groups # keyboard shortcuts
 Group "init"
 Channel gmail-clone
@@ -164,7 +206,6 @@ Channel mutt-clone
 Channel mutt-clone-sent
 
 Group "get"
-Channel gmail-fetch
-Channel gmail-fetch-sent
+Channel fastmail-fetch
 Channel mutt-fetch
 Channel mutt-fetch-sent

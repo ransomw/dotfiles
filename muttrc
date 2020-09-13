@@ -3,9 +3,10 @@ set editor=emacsclient
 
 set spoolfile=~/mail/mutt/Inbox
 
-set from=auvergnerw@gmail.com
+set from=ransomw@fastmail.com
 set realname='Ransom Williams'
-set smtp_url=smtps://auvergnerw:`cat ~/.config/email/gmailpass`@smtp.gmail.com
+# set smtp_url=smtps://ransomw:`cat ~/.config/email/fastmailmuttpass`@smtp.fastmail.com:465
+set smtp_url=smtps://ransomw@fastmail.com:`cat ~/.config/email/fastmailmuttpass`@smtp.fastmail.com:465
 
 set move=no
 
