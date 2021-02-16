@@ -1,0 +1,6 @@
+urxvt.font: xft:Courier New:size=15
+urxvt.scrollBar: False
+
+URxvt.depth: 32
+URxvt*background: rgba:0000/0000/0000/aaaa
+URxvt*foreground: White

@@ -1,0 +1,71 @@
+"""-*-python-*-
+suggested use:
+place a dotted symlink to this
+file in your home directory
+  ln -s /.../pythonrc ~/.pythonrc
+and set the environment variable
+PYTHONSTARTUP
+to the symlink
+export PYTHONSTARTUP="${HOME}/.pythonrc"
+see also:
+https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
+"""
+
+from collections import (
+    namedtuple,
+)
+from datetime import (
+    datetime as dto,
+    timedelta,
+)
+from functools import (
+    reduce,
+    wraps,
+)
+from inspect import (
+    getmembers as gm,
+)
+from operator import (
+    add,
+)
+import os
+import os.path as pth
+from pprint import (
+    pp,
+)
+
+# wrap all non-standard installed
+# libraries in these try/except
+# forms s.t. they're loaded
+# if installed and don't cause
+# errors otherwise.
+#
+# reading over importlib
+# and in particular finders
+# could be worthwhile,
+# tangentially.
+
+try:
+    import toolz
+    from toolz.functoolz import (
+        compose,
+        curry,
+        flip,
+        juxt,
+    )
+    from toolz.itertoolz import (
+        accumulate,
+        concat,
+        concatv,
+        diff,
+        isdistinct,
+        nth,
+        unique,
+    )
+except ModuleNotFoundError:
+    pass
+
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    pass

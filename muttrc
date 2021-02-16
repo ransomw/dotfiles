@@ -25,3 +25,7 @@ group -group personal -addr `cat ~/.config/email/personal_addrs.list | tr '\n' '
 macro index .l "l !(%L nope|%L openings|%L travel|%L personal)"
 
 group -group me -addr auvergnerw@gmail.com
+
+# suppresses "~/Mail doesn't exist.  do you want to
+# create it?" message
+set folder="~/mail"

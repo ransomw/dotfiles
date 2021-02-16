@@ -1,3 +1,5 @@
+#-*-shell-script-*-
+
 # run for interactive shells.  place in $ZDOTDIR or ~
 
 ### Guide opts and notes
@@ -151,29 +153,35 @@ MARGE=192.241.218.140
 #    combine these with existing bash_aliases.sh,
 #    and build aliases by os and shell.
 alias m='mbsync gmail-fetch && mbsync gmail-fetch-sent && mbsync mutt-fetch && mbsync mutt-fetch-sent && mutt'
+
 # -h for human-readable file sizes
 alias ls='ls -h'
+# sort by descending creation date
+alias ls_time='ls -ct'
 
+##
+# prevent man page line-wrap by fitting page
+# to terminal
+#
+# $COLUMNS is a zsh "magic" variable
+# the MANWIDTH env var is tested on FreeBSD..
+# .. does this variable have an effect on all systems?
+alias man='MANWIDTH=$COLUMNS man'
 
-
-
-alias mpv='mpv --audio-device=oss//dev/dsp0.0'
+alias mpv='/usr/local/bin/mpv --audio-device=oss//dev/dsp0.0'
 alias mn='mpv --vid=no'
-alias mpvvn='mpv --vid=no'
 alias mpvm='mpv -mute="yes"'
-alias mpvml='mpv -mute="yes" --loop-playlist=inf'
 alias mpvs='mpv --shuffle'
 
 alias ddg='links http://www.duckduckgo.com'
 alias handbook='links /usr/local/share/doc/freebsd/handbook/index.html'
 
 
-alias mute='mixer -f /dev/mixer0 vol 0:0'
-# ~/.config/ files would allow keeping track of
-# ([un]mute x speaker/headphones)
-alias unmute='mixer -f /dev/mixer0 vol 85:85'
-alias speaker='mixer -f /dev/mixer0 vol 100:100'
-alias emacs='emacs --no-desktop'
+alias emacs='emacs -nw --no-desktop'
+# todo: debug, elaborating to function as needed
+alias xemacs='emacsclient -c || (emacs --daemon --no-desktop && emacsclient -c)'
+
+
 
 # -r is a test for readable files
 if [[ -r ~/.aliasrc ]]; then
@@ -197,9 +205,23 @@ if [[ -r ~/.zsh_hashd ]]; then
     . ~/.zsh_hashd
 fi
 
+
+## python env setup
+
+if [[ -f ~/.pythonrc ]]; then
+    export PYTHONSTARTUP="${HOME}/.pythonrc"
+fi
+
+
+##
+
+
 ## user-defined path extensions
 export PATH="$HOME/bin:$PATH"
 
 export PLAN9=/usr/home/ransom/sbin/plan9
 export PATH=$PATH:$PLAN9/bin
 alias acme='acme -f $PLAN9/font/fixed/unicode.10x20.font'
+
+
+#####

@@ -38,3 +38,10 @@
 (global-set-key (kbd "C-9") '(lambda()(interactive)(djcb-opacity-modify t)))
 (global-set-key (kbd "C-0") '(lambda()(interactive)
                                (modify-frame-parameters nil `((alpha . 100)))))
+
+
+
+;; (derived-mode-map-name 'python-mode)
+
+(define-key python-mode-map (kbd "M-n") 'forward-symbol)
+

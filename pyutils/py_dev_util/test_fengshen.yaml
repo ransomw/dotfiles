@@ -1,0 +1,179 @@
+---
+time-logs:
+  - time-logs:
+      - "BA"
+      - "BB"
+      - "BX"
+      - "EX"
+      - "BY"
+      - "EY"
+      - "EB"
+      - "EA"
+    parsed:
+      - begin_token: "BA"
+        end_token: "EA"
+        begin: "BA"
+        end: "EA"
+        entries:
+          - begin_token: "BB"
+            end_token: "EB"
+            begin: "BB"
+            end: "EB"
+            entries:
+              - "BX"
+              - "EX"
+              - "BY"
+              - "EY"
+  - time-logs:
+      - token: "BA"
+        timestamp: "2020-12-14T02:49:05"
+      - token: "BB"
+        timestamp: "2020-12-14T02:49:34"
+      - token: "BX"
+        timestamp: "2020-12-14T02:49:41"
+      - token: "EX"
+        timestamp: "2020-12-14T02:49:51"
+      - token: "BY"
+        timestamp: "2020-12-14T02:50:01"
+      - token: "EY"
+        timestamp: "2020-12-14T02:50:39"
+      - token: "EB"
+        timestamp: "2020-12-14T02:51:28"
+      - token: "EA"
+        timestamp: "2020-12-14T02:52:23"
+    parsed:
+      - begin_token: "BA"
+        end_token: "EA"
+        begin:
+          token: "BA"
+          timestamp: "2020-12-14T02:49:05"
+        end:
+          token: "EA"
+          timestamp: "2020-12-14T02:52:23"
+        entries:
+          - begin_token: "BB"
+            end_token: "EB"
+            begin:
+              token: "BB"
+              timestamp: "2020-12-14T02:49:34"
+            end:
+              token: "EB"
+              timestamp: "2020-12-14T02:51:28"
+            entries:
+              - token: "BX"
+                timestamp: "2020-12-14T02:49:41"
+              - token: "EX"
+                timestamp: "2020-12-14T02:49:51"
+              - token: "BY"
+                timestamp: "2020-12-14T02:50:01"
+              - token: "EY"
+                timestamp: "2020-12-14T02:50:39"
+    token-attr: "token"
+  - time-logs:
+      - "BB"
+      - "BX"
+      - "EX"
+      - "BY"
+      - "EY"
+      - "EB"
+      - "EA"
+    parsed:
+      - begin_token: "BB"
+        end_token: "EB"
+        begin: "BB"
+        end: "EB"
+        entries:
+          - "BX"
+          - "EX"
+          - "BY"
+          - "EY"
+      - end_token: "EA"
+        end: "EA"
+  - time-logs:
+      - "BA"
+      - "BB"
+      - "BX"
+      - "EX"
+      - "BY"
+      - "EY"
+      - "EB"
+    parsed:
+      - begin_token: "BA"
+        begin: "BA"
+        entries:
+          - begin_token: "BB"
+            end_token: "EB"
+            begin: "BB"
+            end: "EB"
+            entries:
+              - "BX"
+              - "EX"
+              - "BY"
+              - "EY"
+  - time-logs:
+      - "BA"
+      - "BB"
+      - "X"
+      - "Y"
+      - "B"
+    parsed:
+      - begin_token: "BA"
+        begin: "BA"
+        entries:
+          - begin_token: "BB"
+            begin: "BB"
+            entries:
+              - "X"
+              - "Y"
+              - "B"
+  - time-logs:
+      - "BA"
+      - "BB"
+      - "BX"
+      - "EX"
+      - "EB"
+      - "BB"
+      - "BY"
+      - "EY"
+      - "EB"
+      - "EA"
+    parsed:
+      - begin_token: "BA"
+        end_token: "EA"
+        begin: "BA"
+        end: "EA"
+        entries:
+          - begin_token: "BB"
+            end_token: "EB"
+            begin: "BB"
+            end: "EB"
+            entries:
+              - "BX"
+              - "EX"
+          - begin_token: "BB"
+            end_token: "EB"
+            begin: "BB"
+            end: "EB"
+            entries:
+              - "BY"
+              - "EY"
+keymap-aux:
+  - aux-input:
+        asdf: 'zxcv'
+    dict-to-map:
+        asdf: 1
+        zxc: 2
+    expected-map:
+        zxcv: 1
+        zxc: 2
+  - aux-input:
+        1: 2
+    dict-to-map:
+        1: 10
+        3: 11
+    expected-map:
+        2: 10
+        6: 11
+    fn: |
+      lambda x: x * 2
+
