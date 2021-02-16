@@ -29,6 +29,7 @@ from operator import (
     add,
 )
 import os
+import sys
 import os.path as pth
 from pprint import (
     pp,
@@ -67,5 +68,13 @@ except ModuleNotFoundError:
 
 try:
     import numpy as np
+except ModuleNotFoundError:
+    pass
+
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+
+try:
+    import pyutils
 except ModuleNotFoundError:
     pass
