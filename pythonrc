@@ -24,9 +24,14 @@ from functools import (
 )
 from inspect import (
     getmembers as gm,
+    getsource,
+    getsourcefile as gsf,
+    getmodule,
 )
 from operator import (
     add,
+    itemgetter as ig,
+    attrgetter,
 )
 import os
 import sys
@@ -34,47 +39,129 @@ import os.path as pth
 from pprint import (
     pp,
 )
+import pydoc
 
-# wrap all non-standard installed
-# libraries in these try/except
-# forms s.t. they're loaded
-# if installed and don't cause
-# errors otherwise.
-#
-# reading over importlib
-# and in particular finders
-# could be worthwhile,
-# tangentially.
+###
+if sys.prefix == sys.base_prefix:
+    raise Exception("not in venv")
 
-try:
-    import toolz
-    from toolz.functoolz import (
-        compose,
-        curry,
-        flip,
-        juxt,
-    )
-    from toolz.itertoolz import (
-        accumulate,
-        concat,
-        concatv,
-        diff,
-        isdistinct,
-        nth,
-        unique,
-    )
-except ModuleNotFoundError:
-    pass
+class ImportBlocker(object):
+    def __init__(self):
+        self.module_names = set()
+        self.package_names = set()
 
-try:
-    import numpy as np
-except ModuleNotFoundError:
-    pass
+    def find_module(self, fullname, path=None):
+        if fullname.split('.')[0] in self.package_names:
+            return self
+        if fullname in self.module_names:
+            return self
+        return None
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+    def exec_module(self, mdl):
+        # return an empty namespace
+        return {}
+
+    def create_module(self, spec):
+        return None
+ 
+
+import_blocker = ImportBlocker()
+sys.meta_path.append(import_blocker)
+
+"""
+import_blocker.package_names.add('chickenlib')
+import chickenlib
+print(vars(chickenlib))
+breakpoint()
+"""
 
 
-try:
-    import pyutils
-except ModuleNotFoundError:
-    pass
+
+
+"""
+from importlib.abc import MetaPathFinder, Loader
+
+class IgnoredImportLoader(Loader):
+    def create_module(self, spec):
+        return None
+    def exec_module(self, mdl):
+        # return an empty namespace
+        return {}
+
+
+
+class IgnoredImportFinder(MetaPathFinder):
+    def find_module(self, fullname, path=None):
+        breakpoint()
+        if fullname in _ignore_import_modules:
+            return IgnoredImportLoader()
+        return None
+"""
+#breakpoint()
+
+#sys.meta_path = [IgnoredImportFinder()]
+#sys.meta_path.append(IgnoredImportFinder())
+#sys.meta_path = [IgnoredImportFinder()] + sys.meta_path
+
+def my_except_hook(exctype, value, traceback):
+    if exctype is KeyboardInterrupt:
+        print("see you later!")
+    sys.__excepthook__(exctype, value, traceback)
+
+
+
+sys.excepthook = my_except_hook
+
+while True:
+    try:
+        import toolz
+        from toolz.functoolz import (
+            compose,
+            curry,
+            flip,
+            juxt,
+        )
+        from toolz.itertoolz import (
+            accumulate,
+            concat,
+            concatv,
+            diff,
+            isdistinct,
+            nth,
+            unique,
+        )
+        import numpy as np
+        sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+        import pyutils
+        sys.path.pop()
+    except ModuleNotFoundError as err:
+        import_blocker.package_names.add(err.name)
+        # breakpoint()
+        # _uninstalled_modules.add(err.name)
+        continue
+    break
+        
+
+# reset to orig
+#sys.excepthook = sys.__excepthook__
+
+
+
+
+uninstalled_packages = import_blocker.package_names.copy()
+if uninstalled_packages:
+    print("uninstalled packages")
+    print(uninstalled_packages)
+
+###
+
+
+def gmn(*args, **kwargs):
+    return [m[0] for m in gm(*args, **kwargs)]
+
+
+def gs(*args, **kwargs):
+    pydoc.pager(getsource(*args, **kwargs))
+
+
+
