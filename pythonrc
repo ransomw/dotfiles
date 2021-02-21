@@ -20,7 +20,7 @@ from datetime import (
 )
 from functools import (
     reduce,
-    wraps,
+  wraps,
 )
 from inspect import (
     getmembers as gm,
@@ -28,6 +28,7 @@ from inspect import (
     getsourcefile as gsf,
     getmodule,
 )
+import operator as op
 from operator import (
     add,
     itemgetter as ig,
@@ -40,6 +41,57 @@ from pprint import (
     pp,
 )
 import pydoc
+
+import curses
+import curses.textpad
+
+
+import subprocess
+from functools import partial
+import configparser
+            
+
+###
+
+
+def gmn(*args, **kwargs):
+    return [m[0] for m in gm(*args, **kwargs)]
+
+
+def gs(*args, **kwargs):
+    pydoc.pager(getsource(*args, **kwargs))
+
+
+ls = os.listdir
+def cat(filepath):
+    with open(filepath) as f:
+        pydoc.pager(f.read())
+
+run = partial(
+    subprocess.run,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    # shell=True,
+    # check=True,
+    )
+
+config = configparser.ConfigParser()
+config.read([
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "python.conf"),
+        ])
+
+class PipInstallException(Exception):
+    pass
+
+def pip_install(package_name):
+    name_to_specifier = {name: config['package-specifiers'][name] for name in config['package-specifiers']}
+    if package_name not in name_to_specifier:
+        raise PipInstallException("unknown package", (package_name,))
+    res = run(["pip", "install", name_to_specifier[package_name]])
+    if res.returncode == 0:
+        return 
+    raise PipInstallException("install failed", (res,))
+
 
 ###
 if sys.prefix == sys.base_prefix:
@@ -68,46 +120,14 @@ class ImportBlocker(object):
 import_blocker = ImportBlocker()
 sys.meta_path.append(import_blocker)
 
-"""
-import_blocker.package_names.add('chickenlib')
-import chickenlib
-print(vars(chickenlib))
-breakpoint()
-"""
-
-
-
-
-"""
-from importlib.abc import MetaPathFinder, Loader
-
-class IgnoredImportLoader(Loader):
-    def create_module(self, spec):
-        return None
-    def exec_module(self, mdl):
-        # return an empty namespace
-        return {}
-
-
-
-class IgnoredImportFinder(MetaPathFinder):
-    def find_module(self, fullname, path=None):
-        breakpoint()
-        if fullname in _ignore_import_modules:
-            return IgnoredImportLoader()
-        return None
-"""
-#breakpoint()
-
-#sys.meta_path = [IgnoredImportFinder()]
-#sys.meta_path.append(IgnoredImportFinder())
-#sys.meta_path = [IgnoredImportFinder()] + sys.meta_path
-
 def my_except_hook(exctype, value, traceback):
     if exctype is KeyboardInterrupt:
         print("see you later!")
     sys.__excepthook__(exctype, value, traceback)
 
+
+def install_package(name):
+    pass
 
 
 sys.excepthook = my_except_hook
@@ -116,7 +136,9 @@ while True:
     try:
         import toolz
         from toolz.functoolz import (
-            compose,
+          compose_left,
+         excepts,
+    compose,
             curry,
             flip,
             juxt,
@@ -126,27 +148,32 @@ while True:
             concat,
             concatv,
             diff,
+        first,
             isdistinct,
             nth,
             unique,
         )
-        import numpy as np
+#        import numpy as np
+        import flask
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
         sys.path.pop()
+        import ics
     except ModuleNotFoundError as err:
-        import_blocker.package_names.add(err.name)
-        # breakpoint()
-        # _uninstalled_modules.add(err.name)
+        package_name = err.name
+        try:
+            print("attempting to install "+package_name)
+            pip_install(package_name)
+        except PipInstallException as ex:
+            if os.getenv("PY_DBG_IMPORTS"):
+                breakpoint()
+            import_blocker.package_names.add(package_name)
         continue
     break
         
 
 # reset to orig
 #sys.excepthook = sys.__excepthook__
-
-
-
 
 uninstalled_packages = import_blocker.package_names.copy()
 if uninstalled_packages:
@@ -155,13 +182,60 @@ if uninstalled_packages:
 
 ###
 
+def edit_text_terminal(text):
+    # startup
+    stdscr = curses.initscr()
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+    ###
 
-def gmn(*args, **kwargs):
-    return [m[0] for m in gm(*args, **kwargs)]
+    height,width = stdscr.getmaxyx()
+    editwin = curses.newwin(height-10, width-10, 1, 1)
+    editwin.scrollok(True)
+    curses.textpad.rectangle(stdscr, 0,0, height-9, width-9)
+    stdscr.refresh()
+
+    box = curses.textpad.Textbox(editwin, insert_mode=True)
+    for char in text:
+        box.do_command(char)
+    # Let the user edit until Ctrl-G is struck.
+    box.edit()
+
+    # Get resulting contents
+    message = box.gather()
+
+    # exit
+    curses.nocbreak()
+    stdscr.keypad(False)
+    curses.echo()
+    curses.endwin()
 
 
-def gs(*args, **kwargs):
-    pydoc.pager(getsource(*args, **kwargs))
+    return message
 
 
+def read_ics(filename):
+    try:
+        with zipfile.ZipFile as zf:
+            ics_name = thread_last(
+                    zf.namelist(),
+                    (filter, compose_left(
+                        pth.splitext,
+                        ig(-1),
+                        partial(op.eq, '.ics'))),
+                    first,
+                    partial(excepts, StopIteration,
+                        handler=lambda _: None))
+            with zf.open(ics_name) as f:
+                cal = ics.Calendar(f.read())
+    except zipfile.BadZipFile:
+        with open(filename) as f:
+            cal = ics.Calendar(f.read())
 
+
+def pastebin_app():
+    app = flask.Flask('pastebin')
+    @app.route('/')
+    def paste():
+        return "unimpl"
