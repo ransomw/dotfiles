@@ -20,7 +20,7 @@ from datetime import (
 )
 from functools import (
     reduce,
-  wraps,
+    wraps,
 )
 from inspect import (
     getmembers as gm,
@@ -49,7 +49,7 @@ import curses.textpad
 import subprocess
 from functools import partial
 import configparser
-            
+
 
 ###
 
@@ -63,9 +63,12 @@ def gs(*args, **kwargs):
 
 
 ls = os.listdir
+
+
 def cat(filepath):
     with open(filepath) as f:
         pydoc.pager(f.read())
+
 
 run = partial(
     subprocess.run,
@@ -73,23 +76,30 @@ run = partial(
     stderr=subprocess.PIPE,
     # shell=True,
     # check=True,
-    )
+)
 
 config = configparser.ConfigParser()
-config.read([
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "python.conf"),
-        ])
+config.read(
+    [
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "python.conf"),
+    ]
+)
+
 
 class PipInstallException(Exception):
     pass
 
+
 def pip_install(package_name):
-    name_to_specifier = {name: config['package-specifiers'][name] for name in config['package-specifiers']}
+    name_to_specifier = {
+        name: config["package-specifiers"][name]
+        for name in config["package-specifiers"]
+    }
     if package_name not in name_to_specifier:
         raise PipInstallException("unknown package", (package_name,))
     res = run(["pip", "install", name_to_specifier[package_name]])
     if res.returncode == 0:
-        return 
+        return
     raise PipInstallException("install failed", (res,))
 
 
@@ -97,13 +107,14 @@ def pip_install(package_name):
 if sys.prefix == sys.base_prefix:
     raise Exception("not in venv")
 
+
 class ImportBlocker(object):
     def __init__(self):
         self.module_names = set()
         self.package_names = set()
 
     def find_module(self, fullname, path=None):
-        if fullname.split('.')[0] in self.package_names:
+        if fullname.split(".")[0] in self.package_names:
             return self
         if fullname in self.module_names:
             return self
@@ -115,10 +126,11 @@ class ImportBlocker(object):
 
     def create_module(self, spec):
         return None
- 
+
 
 import_blocker = ImportBlocker()
 sys.meta_path.append(import_blocker)
+
 
 def my_except_hook(exctype, value, traceback):
     if exctype is KeyboardInterrupt:
@@ -136,9 +148,9 @@ while True:
     try:
         import toolz
         from toolz.functoolz import (
-          compose_left,
-         excepts,
-    compose,
+            compose_left,
+            excepts,
+            compose,
             curry,
             flip,
             juxt,
@@ -148,21 +160,24 @@ while True:
             concat,
             concatv,
             diff,
-        first,
+            first,
             isdistinct,
             nth,
             unique,
         )
-#        import numpy as np
+
+        #        import numpy as np
         import flask
+
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
+
         sys.path.pop()
         import ics
     except ModuleNotFoundError as err:
         package_name = err.name
         try:
-            print("attempting to install "+package_name)
+            print("attempting to install " + package_name)
             pip_install(package_name)
         except PipInstallException as ex:
             if os.getenv("PY_DBG_IMPORTS"):
@@ -170,10 +185,10 @@ while True:
             import_blocker.package_names.add(package_name)
         continue
     break
-        
+
 
 # reset to orig
-#sys.excepthook = sys.__excepthook__
+# sys.excepthook = sys.__excepthook__
 
 uninstalled_packages = import_blocker.package_names.copy()
 if uninstalled_packages:
@@ -181,6 +196,7 @@ if uninstalled_packages:
     print(uninstalled_packages)
 
 ###
+
 
 def edit_text_terminal(text):
     # startup
@@ -190,10 +206,10 @@ def edit_text_terminal(text):
     stdscr.keypad(True)
     ###
 
-    height,width = stdscr.getmaxyx()
-    editwin = curses.newwin(height-10, width-10, 1, 1)
+    height, width = stdscr.getmaxyx()
+    editwin = curses.newwin(height - 10, width - 10, 1, 1)
     editwin.scrollok(True)
-    curses.textpad.rectangle(stdscr, 0,0, height-9, width-9)
+    curses.textpad.rectangle(stdscr, 0, 0, height - 9, width - 9)
     stdscr.refresh()
 
     box = curses.textpad.Textbox(editwin, insert_mode=True)
@@ -211,7 +227,6 @@ def edit_text_terminal(text):
     curses.echo()
     curses.endwin()
 
-
     return message
 
 
@@ -219,14 +234,11 @@ def read_ics(filename):
     try:
         with zipfile.ZipFile as zf:
             ics_name = thread_last(
-                    zf.namelist(),
-                    (filter, compose_left(
-                        pth.splitext,
-                        ig(-1),
-                        partial(op.eq, '.ics'))),
-                    first,
-                    partial(excepts, StopIteration,
-                        handler=lambda _: None))
+                zf.namelist(),
+                (filter, compose_left(pth.splitext, ig(-1), partial(op.eq, ".ics"))),
+                first,
+                partial(excepts, StopIteration, handler=lambda _: None),
+            )
             with zf.open(ics_name) as f:
                 cal = ics.Calendar(f.read())
     except zipfile.BadZipFile:
@@ -235,7 +247,8 @@ def read_ics(filename):
 
 
 def pastebin_app():
-    app = flask.Flask('pastebin')
-    @app.route('/')
+    app = flask.Flask("pastebin")
+
+    @app.route("/")
     def paste():
         return "unimpl"
