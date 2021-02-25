@@ -20,6 +20,7 @@ from datetime import (
 )
 from functools import (
     reduce,
+    partial,
     wraps,
 )
 from inspect import (
@@ -27,6 +28,7 @@ from inspect import (
     getsource,
     getsourcefile as gsf,
     getmodule,
+    ismodule,
 )
 import operator as op
 from operator import (
@@ -47,9 +49,15 @@ import curses.textpad
 
 
 import subprocess
-from functools import partial
 import configparser
 
+import pathlib
+
+from io import (
+    BytesIO,
+)
+
+from warnings import warn
 
 ###
 
@@ -60,6 +68,44 @@ def gmn(*args, **kwargs):
 
 def gs(*args, **kwargs):
     pydoc.pager(getsource(*args, **kwargs))
+
+
+def pysearch_name(name, maxdepth=3):
+    res = []
+    permissive_getattr = excepts(
+        (ModuleNotFoundError, AttributeError), partial(getattr), lambda _: None
+    )
+
+    def name_match(mname):
+        return name in mname
+
+    res += [sys.modules[mname] for mname in sys.modules.keys() if name_match(mname)]
+
+    def search_class(cls):
+        for mname in dir(cls):
+            if name_match(mname):
+                res.append(permissive_getattr(cls, mname))
+
+    def search_module(module, depth):
+        if depth > maxdepth:
+            return
+        if name in dir(module):
+            res.append(permissive_getattr(module, name))
+        for (mname, member) in [
+            (mname, permissive_getattr(module, mname)) for mname in dir(module)
+        ]:
+            if not member:
+                continue
+            if name_match(mname):
+                res.append(member)
+            if isinstance(member, type):
+                search_class(member)
+            if ismodule(member):
+                search_module(member, depth + 1)
+
+    for mname in list(sys.modules.keys()):
+        search_module(sys.modules[mname], 0)
+    return res
 
 
 ls = os.listdir
@@ -104,8 +150,14 @@ def pip_install(package_name):
 
 
 ###
+_VENV_DIR = pth.join(str(pathlib.Path().home()), ".pyvenv")
+_DEFAULT_VENV = pth.join(_VENV_DIR, "default")
 if sys.prefix == sys.base_prefix:
-    raise Exception("not in venv")
+    if not os.getenv("PY_CREATE_VENV"):
+        raise Exception("not in venv.  set PY_CREATE_VENV to create")
+    venv.create(_DEFAULT_VENV)
+    print(". " + pth.join(_DEFAULT_VENV, "bin", "activate"))
+    exit()
 
 
 class ImportBlocker(object):
@@ -168,12 +220,14 @@ while True:
 
         #        import numpy as np
         import flask
+        import werkzeug
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
 
         sys.path.pop()
         import ics
+        import uuid0
     except ModuleNotFoundError as err:
         package_name = err.name
         try:
@@ -246,9 +300,110 @@ def read_ics(filename):
             cal = ics.Calendar(f.read())
 
 
-def pastebin_app():
+def pastebin_app(port=5005):
     app = flask.Flask("pastebin")
 
-    @app.route("/")
+    pastes = {}
+
+    def store(text, f):
+        pastes[str(uuid0.generate())] = {
+            "text": text,
+            "file": f,
+        }
+
+    def retrieve(pid):
+        return pastes[pid]
+
+    def paste_ids():
+        return list(pastes.keys())
+
+    @app.route("/download/<pid>/<filename>")
+    def download(pid, filename):
+        paste = retrieve(pid)
+        if filename != paste["file"]["name"]:
+            warn("url filename not equal to stored filename")
+        return flask.send_file(
+            BytesIO(paste["file"]["bytes"]),
+            attachment_filename=paste["file"]["name"],
+        )
+
+    @app.route("/<pid>")
+    def look(pid):
+        paste = retrieve(pid)
+        return (
+            (
+                """
+        <h3>{time}</h3>
+        <p>{text}</p>
+        """
+            ).format(
+                time=uuid0.UUID(pid).datetime.isoformat(),
+                text=paste["text"],
+            )
+            + (
+                (
+                    """
+        <a href="{get}">download</a>
+        """
+                ).format(
+                    get=flask.url_for(
+                        "download",
+                        pid=pid,
+                        filename=paste["file"]["name"],
+                    ),
+                )
+                if paste["file"]
+                else ""
+            )
+        )
+
+    @app.route("/", methods=["GET", "POST"])
     def paste():
-        return "unimpl"
+        text_name = "pastetext"
+        file_name = "pastefile"
+        if flask.request.method == "POST":
+            text = flask.request.form[text_name]
+            file_storage = flask.request.files[file_name]
+            file_storage.mimetype
+            file_name = file_storage.filename
+            file_bytes = file_storage.read() if file_storage.filename else None
+            store(
+                text,
+                {
+                    "bytes": file_bytes,
+                    "name": file_name,
+                },
+            )
+
+        return """
+        <form method="post" enctype="multipart/form-data">
+            <textarea name={text} style="width:95vw; height:80vh;"></textarea>
+            <p style="height:15vh;">
+            <input type=file name={file_name}>
+            <input type=submit value=PASTE>
+            </p>
+        </form>
+        <h2>{list_prefix}pastes</h2>
+        <ul>{paste_list}</ul>
+    """.format(
+            text=text_name,
+            file_name=file_name,
+            list_prefix=("" if paste_ids() else "no "),
+            paste_list="".join(
+                [
+                    """<li><a href="{url}">{pid} - {time}</a></li>""".format(
+                        url=flask.url_for("look", pid=pid),
+                        time=uuid0.UUID(pid).datetime.isoformat(),
+                        pid=pid,
+                    )
+                    for pid in paste_ids()
+                ]
+            ),
+        )
+
+    werkzeug.serving.run_simple(
+        "0.0.0.0",
+        port,
+        app,
+        use_debugger=True,
+    )
