@@ -75,7 +75,6 @@ def gs(*args, **kwargs):
 
 
 class NameSpace:
-
     def __init__(self, obj):
         self._obj = obj
 
@@ -84,14 +83,13 @@ class NameSpace:
             return dir(self._obj)
         elif isclass(self._obj):
             return dir(self._obj)
-        assert False, (repr(self._obj) + " is not a module or class")
+        assert False, repr(self._obj) + " is not a module or class"
 
     def attrs(self):
         return map(partial(getattr, self._obj), self.names())
 
     def namespaces(self):
-        [Namespace(attr) for attr in self.attrs()
-            if any( juxt(ismodule, isclass)(attr))]
+        [Namespace(attr) for attr in self.attrs() if any(juxt(ismodule, isclass)(attr))]
 
 
 def pysearch_name(name, maxdepth=3):
@@ -320,7 +318,7 @@ def read_ics(filename):
                 excepts((StopIteration,), first, handler=lambda _: None),
             )
             with zf.open(ics_name) as f:
-                cal = ics.Calendar(f.read().decode('utf-8'))
+                cal = ics.Calendar(f.read().decode("utf-8"))
     except zipfile.BadZipFile:
         with open(filename) as f:
             cal = ics.Calendar(f.read())
@@ -332,29 +330,44 @@ def ics_cal_busy_times_this_week(cal, disp=False):
     mon = today - timedelta(days=today.weekday())
     if today.weekday() in [5, 6]:
         mon += timedelta(days=7)
-    #mon = t.combine(mon, dt.time())
+    # mon = t.combine(mon, dt.time())
     fri = mon + timedelta(days=4)
-    events_this_week = [ev for ev in cal.events
-            if mon <= ev.begin.datetime.date() <= fri ]
-    busy_times_this_week = [(ev.begin.datetime, ev.end.datetime)
-            for ev in events_this_week]
+    events_this_week = [
+        ev for ev in cal.events if mon <= ev.begin.datetime.date() <= fri
+    ]
+    busy_times_this_week = [
+        (ev.begin.datetime, ev.end.datetime) for ev in events_this_week
+    ]
     busy_times_this_week.sort(key=ig(0))
     busy_times_by_day = groupby(
-            compose(lambda d: d.date().weekday(), ig(0)),
-            busy_times_this_week)
-    day_abbrevs = ['M', 'Tu', 'W', 'Th', 'F']
-    day_abbrev_to_busy_times = dict(zip(day_abbrevs,
-    get(list(range(len(day_abbrevs))), busy_times_by_day, default=[])))
+        compose(lambda d: d.date().weekday(), ig(0)), busy_times_this_week
+    )
+    day_abbrevs = ["M", "Tu", "W", "Th", "F"]
+    day_abbrev_to_busy_times = dict(
+        zip(
+            day_abbrevs,
+            get(list(range(len(day_abbrevs))), busy_times_by_day, default=[]),
+        )
+    )
     if not disp:
         return day_abbrev_to_busy_times
     for (day_abbrev, busy_times) in day_abbrev_to_busy_times.items():
-        print((day_abbrev+' '+
-            ', '.join([(busy_time[0].strftime("%H:%M")
-                +"-"+
-                busy_time[1].strftime("%H:%M"))
-                for busy_time in busy_times])
-            ))
-
+        print(
+            (
+                day_abbrev
+                + " "
+                + ", ".join(
+                    [
+                        (
+                            busy_time[0].strftime("%H:%M")
+                            + "-"
+                            + busy_time[1].strftime("%H:%M")
+                        )
+                        for busy_time in busy_times
+                    ]
+                )
+            )
+        )
 
 
 def pastebin_app(port=5005):
