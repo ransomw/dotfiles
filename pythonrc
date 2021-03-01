@@ -14,6 +14,7 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 from collections import (
     namedtuple,
 )
+import datetime as dt
 from datetime import (
     datetime as dto,
     timedelta,
@@ -29,6 +30,7 @@ from inspect import (
     getsourcefile as gsf,
     getmodule,
     ismodule,
+    isclass,
 )
 import operator as op
 from operator import (
@@ -59,6 +61,8 @@ from io import (
 
 from warnings import warn
 
+import zipfile
+
 ###
 
 
@@ -68,6 +72,26 @@ def gmn(*args, **kwargs):
 
 def gs(*args, **kwargs):
     pydoc.pager(getsource(*args, **kwargs))
+
+
+class NameSpace:
+
+    def __init__(self, obj):
+        self._obj = obj
+
+    def names(self):
+        if ismodule(self._obj):
+            return dir(self._obj)
+        elif isclass(self._obj):
+            return dir(self._obj)
+        assert False, (repr(self._obj) + " is not a module or class")
+
+    def attrs(self):
+        return map(partial(getattr, self._obj), self.names())
+
+    def namespaces(self):
+        [Namespace(attr) for attr in self.attrs()
+            if any( juxt(ismodule, isclass)(attr))]
 
 
 def pysearch_name(name, maxdepth=3):
@@ -206,6 +230,7 @@ while True:
             curry,
             flip,
             juxt,
+            thread_last,
         )
         from toolz.itertoolz import (
             accumulate,
@@ -214,6 +239,8 @@ while True:
             diff,
             first,
             isdistinct,
+            get,
+            groupby,
             nth,
             unique,
         )
@@ -286,18 +313,48 @@ def edit_text_terminal(text):
 
 def read_ics(filename):
     try:
-        with zipfile.ZipFile as zf:
+        with zipfile.ZipFile(filename) as zf:
             ics_name = thread_last(
                 zf.namelist(),
                 (filter, compose_left(pth.splitext, ig(-1), partial(op.eq, ".ics"))),
-                first,
-                partial(excepts, StopIteration, handler=lambda _: None),
+                excepts((StopIteration,), first, handler=lambda _: None),
             )
             with zf.open(ics_name) as f:
-                cal = ics.Calendar(f.read())
+                cal = ics.Calendar(f.read().decode('utf-8'))
     except zipfile.BadZipFile:
         with open(filename) as f:
             cal = ics.Calendar(f.read())
+    return cal
+
+
+def ics_cal_busy_times_this_week(cal, disp=False):
+    today = dt.date.today()
+    mon = today - timedelta(days=today.weekday())
+    if today.weekday() in [5, 6]:
+        mon += timedelta(days=7)
+    #mon = t.combine(mon, dt.time())
+    fri = mon + timedelta(days=4)
+    events_this_week = [ev for ev in cal.events
+            if mon <= ev.begin.datetime.date() <= fri ]
+    busy_times_this_week = [(ev.begin.datetime, ev.end.datetime)
+            for ev in events_this_week]
+    busy_times_this_week.sort(key=ig(0))
+    busy_times_by_day = groupby(
+            compose(lambda d: d.date().weekday(), ig(0)),
+            busy_times_this_week)
+    day_abbrevs = ['M', 'Tu', 'W', 'Th', 'F']
+    day_abbrev_to_busy_times = dict(zip(day_abbrevs,
+    get(list(range(len(day_abbrevs))), busy_times_by_day, default=[])))
+    if not disp:
+        return day_abbrev_to_busy_times
+    for (day_abbrev, busy_times) in day_abbrev_to_busy_times.items():
+        print((day_abbrev+' '+
+            ', '.join([(busy_time[0].strftime("%H:%M")
+                +"-"+
+                busy_time[1].strftime("%H:%M"))
+                for busy_time in busy_times])
+            ))
+
 
 
 def pastebin_app(port=5005):
