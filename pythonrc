@@ -11,6 +11,9 @@ see also:
 https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 """
 
+from typing import (
+        Dict,
+)
 from collections import (
     namedtuple,
 )
@@ -243,16 +246,20 @@ while True:
             unique,
         )
 
-        #        import numpy as np
+        import numpy as np
         import flask
         import werkzeug
+        import ics
+        import uuid0
+        import lxml
+        import pandas as pd
+        import openpyxl
+        import openpyxl.utils.dataframe
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
-
         sys.path.pop()
-        import ics
-        import uuid0
+
     except ModuleNotFoundError as err:
         package_name = err.name
         try:
@@ -275,6 +282,24 @@ if uninstalled_packages:
     print(uninstalled_packages)
 
 ###
+
+def xlst_to_dataframes(filepath):
+    wb = openpyxl.load_workbook(filepath)
+    return {sn: pd.DataFrame(wb[sn].values)
+            for sn in wb.sheetnames}
+
+
+def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
+    wb = openpyxl.Workbook()
+    wb.active
+    for (nm, df) in dfs.items():
+        ws = wb.create_sheet(nm)
+        ws.title
+        for row in openpyxl.utils.dataframe.dataframe_to_rows(df, index=True, header=True):
+            ws.append(row)
+    wb.save(filepath)
+
+
 
 
 def edit_text_terminal(text):
@@ -325,6 +350,7 @@ def read_ics(filename):
     return cal
 
 
+# todo: timezone-aware
 def ics_cal_busy_times_this_week(cal, disp=False):
     today = dt.date.today()
     mon = today - timedelta(days=today.weekday())
