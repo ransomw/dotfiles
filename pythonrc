@@ -167,6 +167,8 @@ def pip_install(package_name):
         for name in config["package-specifiers"]
     }
     if package_name not in name_to_specifier:
+        if os.getenv("PY_DBG_IMPORTS"):
+            breakpoint()
         raise PipInstallException("unknown package", (package_name,))
     res = run(["pip", "install", name_to_specifier[package_name]])
     if res.returncode == 0:
@@ -255,6 +257,8 @@ while True:
         import pandas as pd
         import openpyxl
         import openpyxl.utils.dataframe
+        import wiktionaryparser
+        from wiktionaryparser import WiktionaryParser
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -300,6 +304,13 @@ def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
     wb.save(filepath)
 
 
+def lookup_word_mono(word, lang='english'):
+    """
+    monolingual dictionary lookup
+    """
+    parser = WiktionaryParser()
+    data = parser.fetch(word, lang)
+    return data
 
 
 def edit_text_terminal(text):
