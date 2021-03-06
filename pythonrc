@@ -12,7 +12,7 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 """
 
 from typing import (
-        Dict,
+    Dict,
 )
 from collections import (
     namedtuple,
@@ -46,20 +46,31 @@ import sys
 import os.path as pth
 from pprint import (
     pp,
+    pprint,
 )
+
 import pydoc
+from pydoc import (
+    pager,
+)
 
 import curses
 import curses.textpad
 
 
 import subprocess
+from subprocess import (
+    Popen,
+    PIPE,
+)
+
 import configparser
 
 import pathlib
 
 from io import (
     BytesIO,
+    StringIO,
 )
 
 from warnings import warn
@@ -67,6 +78,12 @@ from warnings import warn
 import zipfile
 
 ###
+
+
+def ppp(obj):
+    sio = StringIO()
+    pprint(obj, stream=sio)
+    pager(sio.getvalue())
 
 
 def gmn(*args, **kwargs):
@@ -136,9 +153,12 @@ def pysearch_name(name, maxdepth=3):
 ls = os.listdir
 
 
-def cat(filepath):
+def cat(filepath, retstr=False):
     with open(filepath) as f:
-        pydoc.pager(f.read())
+        fstr = f.read()
+    if retstr:
+        return fstr
+    pydoc.pager(fstr)
 
 
 run = partial(
@@ -148,6 +168,26 @@ run = partial(
     # shell=True,
     # check=True,
 )
+
+
+def run_1(cmd, timeout=None, stream=sys.stdout, err_stream=sys.stderr):
+    def output_reader(proc):
+        for line in iter(proc.stdout.readline, b""):
+            print(line.decode("utf-8"), file=stream, end="")
+
+    def err_reader(proc):
+        for line in iter(proc.stderr.readline, b""):
+            print(line.decode("utf-8"), file=err_stream, end="")
+
+    proc = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    tout = threading.Thread(target=output_reader, args=(proc,))
+    terr = threading.Thread(target=err_reader, args=(proc,))
+    tout.start()
+    terr.start()
+    proc.wait(timeout=timeout)
+    t.join()
+    t.join()
+
 
 config = configparser.ConfigParser()
 config.read(
@@ -170,7 +210,8 @@ def pip_install(package_name):
         if os.getenv("PY_DBG_IMPORTS"):
             breakpoint()
         raise PipInstallException("unknown package", (package_name,))
-    res = run(["pip", "install", name_to_specifier[package_name]])
+    cmd = ["pip", "install", name_to_specifier[package_name]]
+    res = subprocess.run(cmd)
     if res.returncode == 0:
         return
     raise PipInstallException("install failed", (res,))
@@ -226,6 +267,9 @@ sys.excepthook = my_except_hook
 while True:
     try:
         import toolz
+        import toolz.functoolz as ftlz
+        import toolz.itertoolz as itlz
+        import toolz.dicttoolz as dtlz
         from toolz.functoolz import (
             compose_left,
             excepts,
@@ -247,6 +291,16 @@ while True:
             nth,
             unique,
         )
+        from toolz.dicttoolz import (
+            keymap,
+            valmap,
+            itemmap,
+        )
+        from toolz.curried import (
+            keyfilter,
+            valfilter,
+            itemfilter,
+        )
 
         import numpy as np
         import flask
@@ -259,9 +313,14 @@ while True:
         import openpyxl.utils.dataframe
         import wiktionaryparser
         from wiktionaryparser import WiktionaryParser
+        import shapely
+        import matplotlib
+
+        #        from matplotlib import pyplot
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
+
         sys.path.pop()
 
     except ModuleNotFoundError as err:
@@ -287,10 +346,34 @@ if uninstalled_packages:
 
 ###
 
+
+def osm_to_shp(filename):
+    with open(filename) as f:
+        fstr = f.read()
+        root = lxml.etree.XML(bytes(fstr, "utf-8"))
+    tags = [t.tag for t in root]
+    assert root.tag == "osm"
+    assert set(tags) <= {"node", "relation", "way", "bounds"}
+    assert root[0].tag == "bounds"
+    assert set(tags[1:]) <= {"node", "relation", "way"}
+    assert "way" not in tags or (set(tags[tags.index("way") :]) <= {"relation", "way"})
+    assert "relation" not in tags or (
+        set(tags[tags.index("relation") :]) <= {"relation"}
+    )
+    nodes = [el for el in root if el.tag == "node"]
+    ways = [el for el in root if el.tag == "way"]
+    relations = [el for el in root if el.tag == "relation"]
+    bounds_dict = dict(root[0].items())
+    min_bound = (bounds_dict["minlat"], bounds_dict["minlon"])
+    max_bound = (bounds_dict["maxlat"], bounds_dict["maxlon"])
+    breakpoint()
+    # (beginnings of) some cleverness
+    juxt(map(compose(keyfilter, flip(str.startswith)), ["min", "max"]))(bounds_dict)
+
+
 def xlst_to_dataframes(filepath):
     wb = openpyxl.load_workbook(filepath)
-    return {sn: pd.DataFrame(wb[sn].values)
-            for sn in wb.sheetnames}
+    return {sn: pd.DataFrame(wb[sn].values) for sn in wb.sheetnames}
 
 
 def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
@@ -299,12 +382,14 @@ def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
     for (nm, df) in dfs.items():
         ws = wb.create_sheet(nm)
         ws.title
-        for row in openpyxl.utils.dataframe.dataframe_to_rows(df, index=True, header=True):
+        for row in openpyxl.utils.dataframe.dataframe_to_rows(
+            df, index=True, header=True
+        ):
             ws.append(row)
     wb.save(filepath)
 
 
-def lookup_word_mono(word, lang='english'):
+def lookup_word_mono(word, lang="english"):
     """
     monolingual dictionary lookup
     """
@@ -436,6 +521,8 @@ def pastebin_app(port=5005):
 
     @app.route("/<pid>")
     def look(pid):
+        if pid == "favicon.ico":
+            return "", 404
         paste = retrieve(pid)
         return (
             (
