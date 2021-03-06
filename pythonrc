@@ -286,8 +286,8 @@ while True:
             diff,
             first,
             isdistinct,
-            get,
             groupby,
+            mapcat,
             nth,
             unique,
         )
@@ -297,6 +297,7 @@ while True:
             itemmap,
         )
         from toolz.curried import (
+            get,
             keyfilter,
             valfilter,
             itemfilter,
@@ -366,9 +367,97 @@ def osm_to_shp(filename):
     bounds_dict = dict(root[0].items())
     min_bound = (bounds_dict["minlat"], bounds_dict["minlon"])
     max_bound = (bounds_dict["maxlat"], bounds_dict["maxlon"])
-    breakpoint()
     # (beginnings of) some cleverness
     juxt(map(compose(keyfilter, flip(str.startswith)), ["min", "max"]))(bounds_dict)
+
+    ### munging #
+
+    breakpoint()
+    el_attrs = lambda x: dict(x.items())
+    attr_eq = lambda name, val: (compose(partial(op.eq, val), attrgetter(name)))
+    has_tag = lambda el, tag_name: any(
+        [
+            True
+            for x in el
+            if (x.tag == "tag" and "k" in el_attrs(x) and el_attrs(x)["k"] == tag_name)
+        ]
+    )
+
+    #    filter(compose_left(el_attrs, get('k'), partial(op.eq, 'highway')),
+    #    filter(compose_left(el_attrs, flip(op.contains, 'k')),
+    #        filter(compose(partial(op.eq, 'tag'), attrgetter('tag')),
+    #            list(ways[2]))))
+
+    waterways = list(filter(flip(has_tag, "waterway"), ways))
+    highways = list(filter(flip(has_tag, "highway"), ways))
+    named_highways = list(filter(flip(has_tag, "name"), highways))
+
+    assert len(set(map(compose(ig("id"), el_attrs), nodes))) == len(
+        nodes
+    ), "nodes have unique ids"
+    nodes_by_id = {el_attrs(n)["id"]: n for n in nodes}
+
+    named_highways_lat_lons = ftlz.pipe(
+        named_highways,
+        partial(map, list),
+        partial(
+            map,
+            compose_left(
+                partial(filter, attr_eq("tag", "nd")),
+                list,
+            ),
+        ),
+        partial(
+            map,
+            compose_left(
+                partial(
+                    map,
+                    compose_left(
+                        el_attrs,
+                        ig("ref"),
+                        flip(get, nodes_by_id),
+                    ),
+                ),
+                list,
+            ),
+        ),
+        partial(
+            map,
+            compose_left(
+                partial(
+                    map,
+                    compose_left(
+                        el_attrs,
+                        get(["lat", "lon"]),
+                        compose(
+                            list,
+                            partial(map, float),
+                        ),
+                    ),
+                ),
+                list,
+            ),
+        ),
+        list,
+    )
+
+    breakpoint()
+
+    ways_keys = thread_last(
+        ways,
+        (mapcat, list),
+        (filter, attr_eq("tag", "tag")),
+        (map, el_attrs),
+        (map, ig("k")),
+        set,
+    )
+
+    breakpoint()
+
+    relation = relations[0]
+
+
+currfn = lambda: osm_to_shp("Downloads/map.osm")
 
 
 def xlst_to_dataframes(filepath):
