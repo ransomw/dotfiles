@@ -179,7 +179,7 @@ alias handbook='links /usr/local/share/doc/freebsd/handbook/index.html'
 
 alias emacs='emacs -nw --no-desktop'
 # todo: debug, elaborating to function as needed
-alias xemacs='emacsclient -c || (emacs --daemon --no-desktop && emacsclient -c)'
+alias xemacs='emacsclient -c || (emacs --daemon --no-desktop && sleep 2.3 && emacsclient -c)'
 
 
 
