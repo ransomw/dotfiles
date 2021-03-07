@@ -77,6 +77,13 @@ from warnings import warn
 
 import zipfile
 
+from tempfile import (
+    gettempdir,
+    mkdtemp,
+)
+
+import json
+
 ###
 
 
@@ -316,6 +323,9 @@ while True:
         from wiktionaryparser import WiktionaryParser
         import shapely
         import matplotlib
+        import requests
+        import bs4
+        from bs4 import BeautifulSoup as BS
 
         #        from matplotlib import pyplot
 
@@ -476,6 +486,233 @@ def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
         ):
             ws.append(row)
     wb.save(filepath)
+
+
+def ensure_lang_name_codes(fn):
+    cache_file_path = ensure_lang_name_codes.cache_file_path
+    download_url = ensure_lang_name_codes.download_url
+
+    def get_lang_name_codes_data():
+        if pth.exists(cache_file_path):
+            with open(cache_file_path) as f:
+                return f.read()
+        res = requests.get(download_url)
+        assert res.status_code == 200
+        lang_name_codes_data = res.text.replace("\r", "")
+        with open(cache_file_path, "w") as f:
+            f.write(lang_name_codes_data)
+        return lang_name_codes_data
+
+    def get_lang_name_codes():
+        data = get_lang_name_codes_data()
+        data = list(map(flip(str.split, "\t"), filter(op.truth, data.split("\n"))))
+        assert data[0] == ["Id", "Print_Name", "Inverted_Name"]
+        rows = data[1:]
+        assert len(set(map(ig(0), rows))) == len(rows), "name codes are uniq"
+        return {"rows": rows}
+
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(get_lang_name_codes(), *args, **kwargs)
+
+    return wrapped
+
+
+# todo: study pre-commit caching strategy
+ensure_lang_name_codes.cache_file_path = pth.join(
+    gettempdir(), "lang_name_codes__pycache.tsv"
+)
+# ref. https://iso639-3.sil.org/code_tables/download_tables
+ensure_lang_name_codes.download_url = (
+    "https://iso639-3.sil.org/sites/iso639-3/files/downloads/iso-639-3_Name_Index.tab"
+)
+
+
+@ensure_lang_name_codes
+def ensure_freedict_db_index(lang_name_codes, fn):
+    cache_file_path = ensure_freedict_db_index.cache_file_path
+    download_url = ensure_freedict_db_index.download_url
+
+    def get_freedict_db_index_data():
+        if pth.exists(cache_file_path):
+            with open(cache_file_path) as f:
+                return f.read()
+        res = requests.get(download_url)
+        assert res.status_code == 200
+        freedict_db_index_data = res.text.replace("\r", "")
+        with open(cache_file_path, "w") as f:
+            f.write(freedict_db_index_data)
+        return freedict_db_index_data
+
+    def get_freedict_db_index():
+        data = thread_last(
+            get_freedict_db_index_data(),
+            json.loads,
+            (itlz.remove, get("software", default=None)),
+            list,
+        )
+        for datum in data:
+            assert "name" in dataum, "entries have language names"
+        assert set(map(compose(len, flip(str.split, "-"), ig("name")), data)) == {
+            2
+        }, "language names are pairs"
+        assert set(mapcat(compose(flip(str.split, "-"), ig("name")), data)) <= set(
+            map(ig(0), lang_name_codes["rows"])
+        ), "language name pair items are known language codes"
+        return {"data": data}
+
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(get_freedict_db_index(), *args, **kwargs)
+
+    return wrapped
+
+
+ensure_freedict_db_index.cache_file_path = pth.join(
+    gettempdir(), "freedict_db_index__pycache.tsv"
+)
+# ref. https://github.com/freedict/fd-dictionaries/wiki/FreeDict-API
+ensure_freedict_db_index.download_url = "https://freedict.org/freedict-database.json"
+
+
+@ensure_lang_name_codes
+def lang_name_code_to_lang_name(lang_name_codes, lang_name_code):
+    rows = lang_name_codes["rows"]
+    code_to_name = {row[0]: row[1] for row in rows}
+    if lang_name_code not in code_to_name:
+        raise ValueError("unknown language name code", (lang_name_code,))
+    return code_to_name[lang_name_code]
+
+
+@ensure_lang_name_codes
+def lang_name_to_lang_name_codes(lang_name_codes, lang_name):
+    rows = lang_name_codes["rows"]
+
+    def name_pred(name):
+        return lang_name.lower() in name.lower()
+
+    codes = thread_last(
+        rows,
+        (filter, compose_left(ig(1), name_pred)),
+        (map, ig(0)),
+        list,
+    )
+    return codes
+
+
+@ensure_lang_name_codes
+def get_bilingual_dictionary_downloads(lang_name_codes):
+    cache_dir_path = get_bilingual_dictionary_downloads.cache_dir_path
+    if pth.exists(cache_dir_path):
+        assert pth.isdir(cache_dir_path)
+    else:
+        os.mkdir(cache_dir_path)
+    urls = {
+        "mid_omegawiki_index": "http://dictionarymid.sourceforge.net/dictionaries/dictsBinlingualsOmegaWiki.html",
+        "mid_other_index": "http://dictionarymid.sourceforge.net/dictionaries/dictsOtherBilinguals.html",
+        "digitaltibetan": "http://digitaltibetan.org/Media/Resources/",
+    }
+
+    def url_path_basename(url_path):
+        return thread_last(url_path.split("/"), (filter, op.truth), list, itlz.last)
+
+    def get_cache_filepath(url):
+        parsed_url = requests.compat.urlparse(url)
+        url_path_basename = url_path_basename(parsed_url.path)
+        itlz.last(list(filter(op.truth, (parsed_url.path + "/").split("/"))))
+        return pth.join(cache_dir_path, parsed_url.netloc + url_path_basename)
+
+    assert len(urls) == len(
+        map(get_cache_filepath, urls.values())
+    ), "all index urls have unique cache location"
+
+    def get_soup(url):
+        cache_filepath = get_cache_filepath(url)
+        if pth.exists(cache_filepath):
+            with open(cache_filepath) as f:
+                return BS(f.read())
+        res = requests.get(url)
+        assert res.status_code == 200
+        with open(cache_filepath, "w") as f:
+            return f.write(res.text)
+        return BS(res.text)
+
+    # BEGIN mid omegawiki
+    soup = get_soup(urls["mid_omegawiki_index"])
+    assert len(soup.find_all("table")) == 1
+    soup.find_all("table")
+    trows = soup.find_all("table")[0].find_all("tr")
+    assert set(map(attrgetter("name"), trows[0].find_all(recursive=False))) == {
+        "th"
+    }, "first row consists of headers"
+    headers = ["Language", "Download", "Web App", "Size"]
+    assert (
+        list(map(attrgetter("text"), trows[0].find_all(recursive=False))) == headers
+    ), "found expected columns"
+    body_trows = [r.find_all(recursive=False) for r in trows[1:]]
+    for row in body_trows:
+        assert set(map(attrgetter("name"), row.find_all(recursive=False))) == {
+            "td"
+        }, "table body rows consist of descriptors"
+        assert (
+            len(row[headers.index("Download")].find_all("a")) == 1
+        ), "download rows contain precisely one anchor"
+    download_urls = map(
+        compose_left(
+            get(headers.index("Download")),
+            lambda el: el.find("a").get("href"),  # :/
+            list,
+        ),
+        body_trows,
+    )
+
+    download_filenames = itlz.pipe(
+        download_urls, requests.compat.urlparse, attrgetter("path"), url_path_basename
+    )
+    assert all(
+        [filename.startswith("DfM_OmegaWiki_") for filename in download_filenames]
+    )
+    download_lang_dsl_names = thread_last(
+        download_filenames,
+        (map, compose_left(flip(str.split, "_"), get(2))),
+    )
+    for name in download_lang_dsl_names:
+        assert len(name) == 6
+        # .. split string on case change fn? ...  snake<>camel, etc.
+        assert name[0].isupper() and name[3].isupper()
+        assert (name[1:3] + name[4:]).islower()
+    download_lang_names = [
+        # match freedict name encoding
+        name[:3] + "-" + name[3:]
+        for name in download_lang_dsl_names
+    ]
+
+    assert set(mapcat(compose(flip(str.split, "-")), download_lang_names)) <= set(
+        map(ig(0), lang_name_codes["rows"])
+    ), (
+        "language names from string typing "
+        "of download filenames "
+        "are known language codes"
+    )
+    omegawiki_dicts = list(zip(download_lang_names, download_filenames))
+    # END mid omegawiki
+
+    soup = get_soup(urls["mid_other_index"])
+
+    breakpoint()
+    raise NotImplementedError()
+
+
+get_bilingual_dictionary_downloads.cache_dir_path = pth.join(
+    gettempdir(), "bilingal_dictionary_downloads_cache_dir"
+)
+
+
+get_lang_info = compose_left(
+    lang_name_to_lang_name_codes,
+    partial(map, juxt(ftlz.identity, lang_name_code_to_lang_name)),
+    list,
+)
 
 
 def lookup_word_mono(word, lang="english"):
