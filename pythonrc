@@ -84,6 +84,10 @@ from tempfile import (
 
 import json
 
+from importlib import (
+    reload,
+)
+
 ###
 
 
@@ -99,6 +103,10 @@ def gmn(*args, **kwargs):
 
 def gs(*args, **kwargs):
     pydoc.pager(getsource(*args, **kwargs))
+
+
+inc = lambda x: x + 1
+dec = lambda x: x - 1
 
 
 class NameSpace:
@@ -290,6 +298,7 @@ while True:
             accumulate,
             concat,
             concatv,
+            cons,
             diff,
             first,
             isdistinct,
@@ -322,6 +331,11 @@ while True:
         import wiktionaryparser
         from wiktionaryparser import WiktionaryParser
         import shapely
+        import shapely.geometry
+        from shapely.geometry import (
+            LineString,
+        )
+        import pyproj
         import matplotlib
         import requests
         import bs4
@@ -377,12 +391,12 @@ def osm_to_shp(filename):
     bounds_dict = dict(root[0].items())
     min_bound = (bounds_dict["minlat"], bounds_dict["minlon"])
     max_bound = (bounds_dict["maxlat"], bounds_dict["maxlon"])
+
     # (beginnings of) some cleverness
     juxt(map(compose(keyfilter, flip(str.startswith)), ["min", "max"]))(bounds_dict)
 
     ### munging #
 
-    breakpoint()
     el_attrs = lambda x: dict(x.items())
     attr_eq = lambda name, val: (compose(partial(op.eq, val), attrgetter(name)))
     has_tag = lambda el, tag_name: any(
@@ -390,7 +404,31 @@ def osm_to_shp(filename):
             True
             for x in el
             if (x.tag == "tag" and "k" in el_attrs(x) and el_attrs(x)["k"] == tag_name)
+            # (attr_eq('tag', 'tag')(x) and "k" in el_attrs(x) and get("k")(el_attrs(x)) == tag_name)
+            # (attr_eq('tag', 'tag')(x) and compose(flip(op.contains, 'k'), el_attrs)(x) and compose(partial(op.eq, tag_name), get("k"), el_attrs)(x))
+            # compose(all, juxt(attr_eq('tag', 'tag')(x), compose(partial(op.eq, tag_name), get("k", default=None), el_attrs)))(x)
         ]
+    )
+    # errors if tag nexist...
+    # ... idea: duplicate get() semantics
+    get_tag = lambda el, tag_name: ftlz.pipe(
+        list(el),
+        partial(
+            filter,
+            compose(
+                all,
+                juxt(
+                    attr_eq("tag", "tag"),
+                    compose_left(
+                        el_attrs,
+                        get("k", default=None),
+                        partial(op.eq, tag_name),
+                    ),
+                ),
+            ),
+        ),
+        first,
+        compose_left(el_attrs, get("v")),
     )
 
     #    filter(compose_left(el_attrs, get('k'), partial(op.eq, 'highway')),
@@ -407,52 +445,45 @@ def osm_to_shp(filename):
     ), "nodes have unique ids"
     nodes_by_id = {el_attrs(n)["id"]: n for n in nodes}
 
-    named_highways_lat_lons = ftlz.pipe(
-        named_highways,
-        partial(map, list),
+    way_to_lat_lons = compose_left(
+        list,
+        partial(filter, attr_eq("tag", "nd")),
         partial(
             map,
             compose_left(
-                partial(filter, attr_eq("tag", "nd")),
-                list,
-            ),
-        ),
-        partial(
-            map,
-            compose_left(
-                partial(
-                    map,
-                    compose_left(
-                        el_attrs,
-                        ig("ref"),
-                        flip(get, nodes_by_id),
-                    ),
+                el_attrs,
+                ig("ref"),
+                flip(get, nodes_by_id),
+                el_attrs,
+                get(["lat", "lon"]),
+                compose(
+                    list,
+                    partial(map, float),
                 ),
-                list,
-            ),
-        ),
-        partial(
-            map,
-            compose_left(
-                partial(
-                    map,
-                    compose_left(
-                        el_attrs,
-                        get(["lat", "lon"]),
-                        compose(
-                            list,
-                            partial(map, float),
-                        ),
-                    ),
-                ),
-                list,
             ),
         ),
         list,
     )
 
-    breakpoint()
+    return {
+        "named_highways": dict(
+            zip(
+                list(map(flip(get_tag, "name"), named_highways)),
+                map(LineString, list(map(way_to_lat_lons, named_highways))),
+            )
+        ),
+        "bounds": {
+            "dict": bounds_dict,
+            "box": shapely.geometry.box(
+                bounds_dict["minlat"],
+                bounds_dict["minlon"],
+                bounds_dict["maxlat"],
+                bounds_dict["maxlon"],
+            ),
+        },
+    }
 
+    # introspection on data format
     ways_keys = thread_last(
         ways,
         (mapcat, list),
@@ -462,12 +493,13 @@ def osm_to_shp(filename):
         set,
     )
 
+
+def plot_osm_shp(shpd):
     breakpoint()
+    pass
 
-    relation = relations[0]
 
-
-currfn = lambda: osm_to_shp("Downloads/map.osm")
+currfn = lambda: plot_osm_shp(osm_to_shp("Downloads/map.osm"))
 
 
 def xlst_to_dataframes(filepath):
