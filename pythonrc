@@ -77,6 +77,11 @@ from warnings import warn
 
 import zipfile
 
+import gzip
+from gzip import (
+    GzipFile,
+)
+
 from tempfile import (
     gettempdir,
     mkdtemp,
@@ -87,6 +92,15 @@ import json
 from importlib import (
     reload,
 )
+
+import shutil
+from shutil import (
+    copyfileobj,
+)
+
+import threading
+
+import time
 
 ###
 
@@ -107,6 +121,18 @@ def gs(*args, **kwargs):
 
 inc = lambda x: x + 1
 dec = lambda x: x - 1
+
+
+class Leaf:
+    pass
+
+
+class Branch:
+    pass
+
+
+class Tree:
+    pass
 
 
 class NameSpace:
@@ -187,12 +213,16 @@ run = partial(
 
 def run_1(cmd, timeout=None, stream=sys.stdout, err_stream=sys.stderr):
     def output_reader(proc):
-        for line in iter(proc.stdout.readline, b""):
+        for line in iter((proc.stdout.readline if proc.stdout else lambda: b""), b""):
             print(line.decode("utf-8"), file=stream, end="")
+        return
 
     def err_reader(proc):
-        for line in iter(proc.stderr.readline, b""):
+        for line in iter((proc.stderr.readline if proc.stderr else lambda: b""), b""):
             print(line.decode("utf-8"), file=err_stream, end="")
+        return
+        # todo: copyfileobj with .decode("utf-8") wrapper
+        proc_strm = proc.stderr or b""
 
     proc = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     tout = threading.Thread(target=output_reader, args=(proc,))
@@ -200,8 +230,8 @@ def run_1(cmd, timeout=None, stream=sys.stdout, err_stream=sys.stderr):
     tout.start()
     terr.start()
     proc.wait(timeout=timeout)
-    t.join()
-    t.join()
+    tout.join()
+    terr.join()
 
 
 config = configparser.ConfigParser()
@@ -216,6 +246,9 @@ class PipInstallException(Exception):
     pass
 
 
+# todo: --cache-dir option,
+#    possibly following pre-commit cache strategy
+# todo(???): build wheels
 def pip_install(package_name):
     name_to_specifier = {
         name: config["package-specifiers"][name]
@@ -337,11 +370,17 @@ while True:
         )
         import pyproj
         import matplotlib
+        from matplotlib import pyplot
         import requests
         import bs4
         from bs4 import BeautifulSoup as BS
+        import npyscreen
 
-        #        from matplotlib import pyplot
+        # without Qt install (see python.conf)
+        # gui `pymol.lauch([])` is inoperative
+        # and this package is at most useful
+        # to parse file formats (protien database -- .pdb), etc.
+        import pymol
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -500,6 +539,97 @@ def plot_osm_shp(shpd):
 
 
 currfn = lambda: plot_osm_shp(osm_to_shp("Downloads/map.osm"))
+
+
+def view_pdb(db_id: str):
+    fn = view_pdb
+    garlic_exec = fn.garlic_exec
+    cache_dir = fn.cache_dir_path
+    if not pth.exists(cache_dir):
+        os.mkdir(cache_dir)
+    download_url_base = fn.download_url_base
+    pdb_file_path = pth.join(
+        cache_dir,
+        "{db_id}.pdb".format(
+            db_id=db_id,
+        ),
+    )
+    pdb_archive_path = pth.join(
+        cache_dir,
+        "{db_id}.pdb.gz".format(
+            db_id=db_id,
+        ),
+    )
+
+    #    breakpoint()
+
+    pdb_file_url = requests.compat.urljoin(
+        download_url_base,
+        "{db_id}.pdb".format(
+            db_id=db_id,
+        ),
+    )
+    pdb_archive_url = requests.compat.urljoin(
+        download_url_base,
+        "{db_id}.pdb.gz".format(
+            db_id=db_id,
+        ),
+    )
+
+    if not pth.exists(pdb_file_path) and not pth.exists(pdb_archive_path):
+        res: request.models.Response = requests.get(pdb_archive_url, stream=True)
+        assert res.status_code == 200
+        chunks = res.iter_content(
+            # read data in "whatever size the chunks are recv'd"
+            # todo: extract personal dsl fn, documenting the "whatever"
+            chunk_size=None,
+        )
+        with open(pdb_archive_path, "wb") as f:
+            for chunk in chunks:
+                f.write(chunk)
+
+    if not pth.exists(pdb_file_path):
+        with gzip.open(pdb_archive_path) as f_gz, open(pdb_file_path, "wb") as f:
+            shutil.copyfileobj(f_gz, f)
+
+    #    breakpoint()
+    proc = Popen([garlic_exec, pdb_file_path])
+    # todo: workaround garlic numeric keypad requirement
+    #   - forward keys from python terminal
+    #   - wrap window (X11 or other layer) to access keys
+    #          while view selected.
+    try:
+        print("interrupt Ctl-c to exit")
+        while True:
+            time.sleep(1024)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        proc.terminate()
+        print("waiting on garlic exit")
+        proc.wait()
+
+    return
+
+    # attempts at optimization
+    with open() as f:
+        with GzipFile(
+            f,
+            # default 'rb'.  no text mode opt here.  gzip.open() only
+            mode="rb",
+        ) as gf:
+            gf.read1()
+
+
+view_pdb.download_url_base = "https://files.rcsb.org/download/"
+view_pdb.garlic_exec = "garlic"
+view_pdb.cache_dir_path = pth.join(gettempdir(), "view_pdb_cache_dir")
+
+
+# todo: scrape wikipedia page to pdb code
+#    https://en.wikipedia.org/wiki/Muscarinic_acetylcholine_receptor_M4
+# todo: search wikipedia page (NLP+force(?))
+#    to receptors (pages w/ pdb codes)
 
 
 def xlst_to_dataframes(filepath):
@@ -735,6 +865,15 @@ def get_bilingual_dictionary_downloads(lang_name_codes):
     raise NotImplementedError()
 
 
+@ensure_lang_name_codes
+def get_syllabary(lang_name_codes, lang_name_code):
+    raise NotImplementedError()
+    pass
+
+
+# get_syllabary.cache_dir = pth.join()
+
+
 get_bilingual_dictionary_downloads.cache_dir_path = pth.join(
     gettempdir(), "bilingal_dictionary_downloads_cache_dir"
 )
@@ -756,7 +895,7 @@ def lookup_word_mono(word, lang="english"):
     return data
 
 
-def edit_text_terminal(text):
+def edit_text_terminal_curses(text):
     # startup
     stdscr = curses.initscr()
     curses.noecho()
@@ -959,3 +1098,6 @@ def pastebin_app(port=5005):
         app,
         use_debugger=True,
     )
+
+
+# todo: use `del` to unclutter locals()
