@@ -99,6 +99,7 @@ from shutil import (
 )
 
 import threading
+import asyncio
 
 import time
 
@@ -381,6 +382,12 @@ while True:
         # and this package is at most useful
         # to parse file formats (protien database -- .pdb), etc.
         import pymol
+
+        from aiohttp import (
+                web as aioweb,
+                )
+        import aiohttp_wsgi
+
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -989,7 +996,7 @@ def ics_cal_busy_times_this_week(cal, disp=False):
         )
 
 
-def pastebin_app(port=5005):
+def pastebin_app(port=5005, run_aio_srv=True):
     app = flask.Flask("pastebin")
 
     pastes = {}
@@ -1025,7 +1032,7 @@ def pastebin_app(port=5005):
             (
                 """
         <h3>{time}</h3>
-        <p>{text}</p>
+        <p><pre>{text}</pre></p>
         """
             ).format(
                 time=uuid0.UUID(pid).datetime.isoformat(),
@@ -1092,12 +1099,30 @@ def pastebin_app(port=5005):
             ),
         )
 
-    werkzeug.serving.run_simple(
-        "0.0.0.0",
-        port,
-        app,
-        use_debugger=True,
+    if not run_aio_srv:
+        werkzeug.serving.run_simple(
+            "0.0.0.0",
+            port,
+            app,
+            use_debugger=True,
+        )
+        return
+
+    # todo: error on Interrupt and rerun (build event loop).
+    # todo: libuv
+    flask_app = app
+    loop = asyncio.get_event_loop()
+    app = aioweb.Application(loop=loop)
+    app.router.add_route(
+        "*", "/{path_info:.*}",
+       aiohttp_wsgi.WSGIHandler(flask_app.wsgi_app))
+    aio_app = app
+    aioweb.run_app(aio_app,
+                   # host='localhost',
+                   host="0.0.0.0",
+                   port=port,
     )
+
 
 
 # todo: use `del` to unclutter locals()
