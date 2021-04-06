@@ -44,6 +44,7 @@ from operator import (
 import os
 import sys
 import os.path as pth
+import random
 from pprint import (
     pp,
     pprint,
@@ -100,6 +101,7 @@ from shutil import (
 
 import threading
 import asyncio
+import queue
 
 import time
 
@@ -1001,6 +1003,14 @@ def pastebin_app(port=5005, run_aio_srv=True):
 
     pastes = {}
 
+    def heartbeat():
+        while True:
+            for pasteid in pastes:
+                if paste_time < now:
+                    pass
+
+#    thread = threading.Thread(
+
     def store(text, f):
         pastes[str(uuid0.generate())] = {
             "text": text,
@@ -1124,5 +1134,28 @@ def pastebin_app(port=5005, run_aio_srv=True):
     )
 
 
-
 # todo: use `del` to unclutter locals()
+
+
+#########################################
+
+def thread_loop_demo():
+
+
+    mock_op = MagicMock()
+    mock_op.side_effect = lambda _: random.random() > 0.5
+        
+
+    def thread_entry(thread_queue):
+        pass
+
+
+    thread_queue = queue.Queue()
+    loop_thread = threading.Thread(target=thread_entry, args=(thread_queue,), daemon=True)
+    loop_thread.start()
+    for idx in range(10):
+        thread_queue.put({"idx": idx})
+
+
+
+
