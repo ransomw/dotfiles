@@ -50,6 +50,9 @@ from pprint import (
     pprint,
 )
 import math
+from copy import (
+    deepcopy,
+)
 
 import pydoc
 from pydoc import (
@@ -405,6 +408,7 @@ while True:
 
         import supermemo2
         import supermemo2.sm_two
+        from supermemo2 import SMTwo
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -562,7 +566,7 @@ def plot_osm_shp(shpd):
     pass
 
 
-currfn = lambda: plot_osm_shp(osm_to_shp("Downloads/map.osm"))
+lastfn = lambda: plot_osm_shp(osm_to_shp("Downloads/map.osm"))
 
 
 def view_pdb(db_id: str):
@@ -853,19 +857,122 @@ def do_time_estimated_task(
             (key_or_ks, type(key_or_ks),))
 
 
+_FLASHCARD_BASE_PATH = gettempdir()
+_FLASHCARD_CSV_DATA_PATH = pth.join(_FLASHCARD_BASE_PATH, "flashcard_data.csv")
 
-
-_FLASHCARD_PATH = None
 
 def set_flashcard_deck():
-    global _FLASHCARD_PATH
+    global _FLASHCARD_BASE_PATH
     raise NotImplementedError()
 
 
-def add_flashcard(
+
+
+
+_FLASHCARD_EMPTY_DF = pd.DataFrame({
+    'jpn': pd.Series([]),
+    'eng': pd.Series([]),
+    'phonetic': pd.Series([]),
+})
+
+def _create_flashcard_csv(column_names):
+    df = pd.DataFrame({
+        column_name: pd.Series([], dtype='str') for column_name in column_names
+    })
+    if pth.exists(_FLASHCARD_CSV_DATA_PATH):
+        warn("overwriting " + _FLASHCARD_CSV_DATA_PATH)
+    with open(_FLASHCARD_CSV_DATA_PATH, 'w') as f:
+        df.to_csv(f, index=False,)
+
+
+def _read_flashcard_csv():
+    with open(_FLASHCARD_CSV_DATA_PATH) as f:
+        return pd.read_csv(f)
+
+
+def _add_to_flashcard_csv(vals: Dict[str, str]):
+    df = _read_flashcard_csv()
+    assert set(vals.keys()) == set(df.columns), (
+        "adding data without extant column names"
+        "or"
+        "missing columns")
+    for col in df.columns:
+        if vals[col] in df[[col]]:
+            raise ValueError("duplicate value in column",
+                             (col, vals[col],))
+    df = df.append(
+        pd.Series([vals[col] for col in df.columns],
+                  dtype=str,
+                  index=df.columns),
+        ignore_index=True,
+    )
+    with open(_FLASHCARD_CSV_DATA_PATH, 'w') as f:
+        df.to_csv(f, index=False,)
+
+
+def _update_flashcard_csv(vals: Dict[str, str]):
+    df = _read_flashcard_csv()
+    assert len(vals) > 1
+    assert set(vals.keys()) <= set(df.columns)
+    raise NotImplementedError()
+
+
+def currfn():
+    _create_flashcard_csv([
+        'jpn',
+        'eng',
+        'phonetic',
+    ])
+    _add_to_flashcard_csv({
+        'jpn': '風chongfeng',
+        'eng': 'wind',
+        'phonetic': 'Kaze',
+    })
+    _add_to_flashcard_csv({
+        'jpn': '水shui',
+        'eng': 'water',
+        'phonetic': 'Mizu',
+    })
+    flashcard_data = _read_flashcard_csv()
+    print("flashcard_data")
+    print(flashcard_data)
+
+
+
+def add_flashcard_data(
         vals: Dict[str, str],
 ):
-    # assert set(vals.keys()) == set(df.columns)
+    if not pth.exists(_FLASHCARD_CSV_DATA_PATH):
+        with open(_FLASHCARD_CSV_DATA_PATH, 'w') as f:
+            _FLASHCARD_EMPTY_DF.to_csv(f)
+
+    with open(_FLASHCARD_CSV_DATA_PATH) as f:
+        df = pd.read_csv(f)
+
+    assert set(vals.keys()) == set(df.columns), (
+        "adding data without extant column names"
+        "or"
+        "missing columns")
+
+    if set(vals.keys()) != set(_FLASHCARD_DF.columns):
+        warn(("adding data without extant column names"
+              "or"
+              "missing columns"))
+        ValueError()
+
+
+    df = df.append(
+        pd.Series(['X', 'Z',],
+                  dtype=str,
+                  index=df.columns),
+        ignore_index=True,
+    )
+
+
+    _FLASHCARD_DF
+
+
+    return
 
 
     df = pd.DataFrame({
@@ -891,12 +998,129 @@ def add_flashcard(
     raise NotImplementedError()
 
 
+def read_flashcard_data():
+
+    raise NotImplementedError()
+
+
 def edit_flashcard():
     raise NotImplementedError()
 
 
+def nextfn():
+    add_flashcard_data({
+        'jpn': '風',
+        'eng': 'eng',
+        'phonetic': 'Kaze',
+    })
+    add_flashcard_data({
+        'jpn': '水',
+        'eng': 'water',
+        'phonetic': 'Mizu',
+    })
+    flashcard_data = read_flashcard_data()
+
+    # 'コウモリ'
+
+
+def _sim_practice_flashcards():
+
+    _MIN_QUALITY = 0
+    _MAX_QUALITY = 5
+
+    cards = [
+        {'sides': ('card-'+str(x), x),
+         'reviews': [],
+         }
+        for x in range(_MIN_QUALITY, _MAX_QUALITY)
+    ]
+
+    first_review_date = dt.date.today()
+
+    init_reviews = {card['reviews']: SMTwo.first_review(i, first_practice_date)
+                    for (i, card,) in enumerate(cards)}
+
+
+    first_practice_date = dt.date.today()
+    second_practice_date = first_practice_date + dt.timedelta(days=1)
+    third_practice_date = second_practice_date + dt.timedelta(days=3)
+
+    first_reviews = [SMTwo.first_review(x, first_practice_date) for x in range(6)]
+    second_reviews = [
+        deepcopy(first_review).review(x, second_practice_date)
+        for first_review in first_reviews
+        for x in range(6)]
+
+    first_review_dates = set([r.review_date for r in first_reviews])
+    second_review_dates = set([r.review_date for r in second_reviews])
+
+    print("review dates")
+    print(first_review_dates)
+    print(second_review_dates)
+
+    print("review intervals")
+    print(set(map(attrgetter('interval'), first_reviews)))
+    print(set(map(attrgetter('interval'), second_reviews)))
+
+    breakpoint()
+
+
+
+
 def practice_flashcards():
-    raise NotImplementedError()
+    # todo: reverse-order difficulty
+    def get_difficulty_input():
+        difficulty = None
+        while difficulty is None:
+            difficulty_input = input('how difficult was that? [1-3] >>>')
+            try:
+                difficulty = int(difficulty_input)
+            except ValueError:
+                pass
+            if difficulty is not None and difficulty < 1 or difficulty > 3:
+                print("difficulty between 1, 2, or 3")
+                difficulty = None
+        return difficulty
+
+    def get_resp_input(card, print_correctness=True):
+        resp = input(card[0] + ' >>> ')
+        if resp == card[1]:
+            print("correct")
+            return True
+        else:
+            print("incorrect")
+            return False
+
+
+    cards = (
+        ('one', '1', []),
+        ('two', '2', []),
+        # ('three', '3', []),
+    )
+
+    curr_date = first_practice_date
+    for card in cards:
+        resp = input(card[0] + ' >>> ')
+        if resp == card[1]:
+            print("correct")
+        else:
+            print("incorrect")
+        difficulty = get_difficulty_input()
+        curr_card_review = SMTwo.first_review(difficulty, curr_date)
+        card[2].append(curr_card_review)
+
+    curr_date = second_practice_date
+    for card in cards:
+        resp = input(card[0] + ' >>> ')
+        if resp == card[1]:
+            print("correct")
+        else:
+            print("incorrect")
+        difficulty = get_difficulty_input()
+        prev_review = card[2][-1]
+        curr_card_review = prev_review.review(difficulty, curr_date)
+        card[2].append(curr_card_review)
+
 
 
 ##<<<##
