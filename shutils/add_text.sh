@@ -1,5 +1,11 @@
 #! /bin/sh
 
+
+### default text:
+# ASS YOU SEE as you see them THEY SEE YOU. -> chocolate cream nier
+# this is elements' closing door -> Dreamcatcher
+# CAN YOU HEAR
+
 FONT_SIZE=24
 
 while getopts "s:" opt; do

@@ -19,6 +19,12 @@ to carry the commands.
 Most of what will interest you here
 is the data structure(s) containing
 the commands and how they are issued.
+
+Try to divide Stimuli into
+* work
+* hobby
+* break
+ ***
 """
 
 import time
@@ -36,6 +42,15 @@ import datetime as dt
 #
 # ffmpeg -i input.mp4 output.wav
 #
+
+###
+# all this is super-buggy.
+# * message timer a one-call that's-all
+# * add espeak to message time
+# * multimedia kickoffs
+# * desktop-switching...
+#   ... set a timer, run a task
+#    (where tasks are composable)
 
 
 def _desktop_message(text):

@@ -205,6 +205,9 @@ if whence zathura &>/dev/null; then
     alias texdoc='PDFVIEWER=zathura texdoc'
 fi
 
+# todo: only activate in venv -- shim?
+alias pyfmt='black' # todo: add opts
+
 ## program wrappers
 
 # todo: window based on screen-size
@@ -340,6 +343,7 @@ fi
 function () {
     # todo: add zsh lang note "anon fn allows local variables" to cookbook
     local workspace_dir=ws
+    hash -d music=~/music
     hash -d bkup=/media/bthumb
     hash -d workspace=~/${workspace_dir}
     hash -d go_almenac=~/${workspace_dir}/sand/go-almenac
