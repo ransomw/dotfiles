@@ -18,6 +18,7 @@ from tempfile import (
 import os.path as pth
 import datetime as dt
 import pandas as pd
+from supermemo2 import SMTwo
 from .review import *
 
 _FLASHCARD_BASE_PATH = gettempdir()

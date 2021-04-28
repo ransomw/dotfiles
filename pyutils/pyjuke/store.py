@@ -53,5 +53,19 @@ def add_to_infodb_csv(vals: Dict[str, str]):
 def update_infodb_csv(vals: Dict[str, str]):
     df = read_infodb_csv()
     assert len(vals) > 1
-    assert set(vals.keys()) <= set(df.columns)
-    raise NotImplementedError()
+    all_val_names = set(vals.keys())
+    assert all_val_names <= set(df.columns)
+    for row_idx in range(len(df)):
+        row_dict = dict(df.iloc[row_idx])
+        same_val_names = [name for name in all_val_names
+                          if vals[name] == row_dict[name]]
+        different_val_names = [name for name in all_val_names
+                               if vals[name] != row_dict[name]]
+        if len(different_val_names) == 1:
+            different_val_name = different_val_names[0]
+            df.loc[row_idx, different_val_name] = vals[different_val_name]
+            break
+    else:
+        raise ValueError("expected to match a row on all except one value name")
+    with open(_FLASHCARD_CSV_DATA_PATH, 'w') as f:
+        df.to_csv(f, index=False,)

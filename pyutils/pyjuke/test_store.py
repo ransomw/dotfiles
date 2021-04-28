@@ -37,7 +37,8 @@ def test_csv_rw(
         'phonetic': 'Kaze',
     }
     store.add_to_infodb_csv(datum_a)
-    datum_a_variant = deepcopy(datum_a).update({
+    datum_a_variant = deepcopy(datum_a)
+    datum_a_variant.update({
         'eng': 'kaze',
     })
     datum_b = {
@@ -59,6 +60,7 @@ def test_csv_rw(
             [datum_a, datum_b,]
             )
     store.update_infodb_csv(datum_a_variant)
+    flashcard_data = store.read_infodb_csv()
     assert ([dict(zip(list(flashcard_data.columns),
                       list(row)))
              for row in flashcard_data.values]
