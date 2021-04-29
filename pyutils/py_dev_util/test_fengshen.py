@@ -1,3 +1,4 @@
+from os import path as pth
 from pprint import pp
 import pytest
 import yaml
@@ -12,7 +13,7 @@ from .fengshen import(
 @pytest.fixture
 def static_data():
     with open(
-            'test_fengshen.yaml',
+            pth.join(pth.dirname(pth.realpath(__file__)), 'test_fengshen.yaml'),
     ) as f:
         return yaml.load(f)
 
