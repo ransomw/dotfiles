@@ -275,7 +275,8 @@ def pip_install(package_name):
         if os.getenv("PY_DBG_IMPORTS"):
             breakpoint()
         raise PipInstallException("unknown package", (package_name,))
-    cmd = ["pip", "install", name_to_specifier[package_name]]
+    specifier = name_to_specifier[package_name]
+    cmd = ["pip", "install",] + (['-e',] if specifier.startswith('git+https://') else []) + [specifier,]
     res = subprocess.run(cmd)
     if res.returncode == 0:
         return

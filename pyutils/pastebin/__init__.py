@@ -1,7 +1,16 @@
 """
 webapp to store notes and files.
 
-todo:
+### todo
+* non-blocking app start
+  - pastebin_app() returns an object
+    and interpreter prompt reappears
+  - object provides access to logs,
+    datastorage
+  - object's interaction with external
+    schedulers (threads, event loops,
+    etc.) permits composable application
+    design
 * sketchpad
 * multiple files per item
 * rename
