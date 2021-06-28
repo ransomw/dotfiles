@@ -9,6 +9,25 @@ to the symlink
 export PYTHONSTARTUP="${HOME}/.pythonrc"
 see also:
 https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
+
+### todo
+* refactor (using rope) into pyutil
+* lint, gofmt-alike, trailing whitespace
+  - pylintrc
+  - pylint ASTeroid checker(s), if only for example
+  - pre-commit
+* auto-generate documentation
+  - sphinx (?)
+  - generate todos from this markdown format
+* music player
+* mic access
+* camera access
+* plivo (or twilio fallback) text msgs
+* image view & editing
+  - scaled .
+* document view & editing
+  - 4-in-1 pdf
+  - pdf text extraction (non-OCR)
 """
 
 from typing import (
@@ -46,7 +65,7 @@ import sys
 import os.path as pth
 import random
 from pprint import (
-    pp,
+    # pp, 2.8+
     pprint,
 )
 import math
@@ -112,8 +131,6 @@ import queue
 import signal
 
 import time
-
-import tkinter
 
 import rlcompleter
 import readline
@@ -384,6 +401,18 @@ while True:
         import pymol
 
         import urwid
+        import tkinter
+
+        import astor
+        import rope
+        import rope.base.project
+        from rope.base.project import (
+            Project as RopeProject,
+        )
+        import rope.refactor.move
+        import rope.refactor.multiproject
+        import rope.contrib.generate
+        import astor
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -422,7 +451,7 @@ if uninstalled_packages:
 ###
 
 
-currfn = lambda: plot_osm_shp(osm_to_shp(TEST_OSM_MAP))
+nextfn = lambda: plot_osm_shp(osm_to_shp(TEST_OSM_MAP))
 
 
 def view_pdb(db_id: str):
@@ -580,7 +609,7 @@ def _xmessage_text(
 
 
 def print_time_estimates():
-    pp(_TIME_ESTIMATE)
+    print(_TIME_ESTIMATE)
     # todo: calculate sums
 
 
@@ -1300,6 +1329,60 @@ def mouse_only_ui(cmd_arg):
             )
     root.mainloop()
 
+
+
+
+
+def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
+    if '.' in pyutils_pkg_name:
+        raise ValueError()
+    pyutils_rootdir = pth.dirname(pyutils.__file__)
+    pythonrc_rootdir = pth.dirname(pyutils_rootdir)
+    pyutils_project = RopeProject(pyutils_rootdir)
+    pythonrc_project = RopeProject(pythonrc_rootdir)
+    #
+    pyutils_pkg_specifier = 'pyutils.'+pyutils_pkg_name
+    if pythonrc_project.find_module(pyutils_pkg_specifier) is not None:
+        raise Exception("create module unimpl")
+    new_pkg = rope.contrib.generate.create_package(pythonrc_project, pyutils_pkg_specifier)
+    #
+
+    fn_name = fn_names[0]
+    #
+
+    dest_pkg = new_pkg
+
+    pythonrc_module = pythonrc_project.get_module('pythonrc.py')
+
+    move_offset = pythonrc_project.get_resource('pythonrc.py').read().index(fn_name)
+    pythonrc_ast = astor.code_to_ast(pythonrc_project.get_resource('pythonrc.py').read())
+
+    breakpoint()
+
+    move_obj = rope.refactor.move.create_move(
+        pythonrc_project,
+        pythonrc_module,
+        move_offset,
+    )
+    if not isinstance(move_obj, (rope.refactor.move.MoveGlobal,)):
+        raise RuntimeError()
+    changes = move_obj.get_changes(dest_pkg)
+
+
+    changes_description = changes.get_description()
+    print(changes_description)
+
+    breakpoint()
+
+    # pythonrc_project.do(changes)
+
+
+
+
+currfn = lambda: rope_move_fn_from_pythonrc([
+    'ics_cal_busy_times_this_week',
+    'read_ics',
+], 'calendar')
 
 
 # todo: use `del` to unclutter locals()
