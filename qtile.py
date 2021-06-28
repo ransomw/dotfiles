@@ -5,6 +5,53 @@ link to ~/.config/qtile/config.py
 
 starting point:
 https://github.com/qtile/qtile/blob/master/libqtile/resources/default_config.py
+
+### todo
+* label terminal (urxvt) windows
+  with program name
+* auto-sort (move windows to group,
+  depending on program) and auto-open
+  (open many windows at once)
+  see table.
+
+
+
++-----+----------+-------------+-----+
+|1    |user      |man          |     |
+|     |admin     |pages,       |     |
+|     |          |             |     |
++-----+----------+-------------+-----+
+|2    |dev exec  |interpreters,|3, 4 |
+|     |          |test runners,|     |
+|     |          |compilers    |     |
+|     |          |             |     |
++-----+----------+-------------+-----+
+|3    |dev       |editors, VC  |2, 4 |
+|     |input     |             |     |
++-----+----------+-------------+-----+
+|4    |dev       |pip          |2, 3 |
+|     |admin     |             |     |
++-----+----------+-------------+-----+
+|5    |monitoring|htop, qtile  |1,9  |
+|     |          |shell,       |     |
+|     |          |dashbd, net  |     |
+|     |          |[?]          |     |
++-----+----------+-------------+-----+
+|6    |playback  |mpv          |7    |
++-----+----------+-------------+-----+
+|7    |media     |youtube-dl,  |6    |
+|     |creation  |ffmpeg, curl,|     |
+|     |          |scrapers[?], |     |
+|     |          |tubing,      |     |
+|     |          |chrome,      |     |
+|     |          |qutebrowser  |     |
++-----+----------+-------------+-----+
+|8    |browser   |chrome       |     |
+|     |          |             |     |
++-----+----------+-------------+-----+
+|9    |root admin|su           |     |
++-----+----------+-------------+-----+
+
 """
 
 from typing import List  # noqa: F401
@@ -23,12 +70,15 @@ keys = [
     Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
     Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
-    Key([mod], "space", 
+    Key([mod], "space",
         #lazy.layout.next(),
         lazy.group.next_window(),
         desc="Move window focus to other window"),
 
     Key([mod], "t", lazy.window.disable_floating(), desc="Tile the window"),
+    Key([mod], "m", lazy.window.toggle_minimize(), desc="Minimize window to TaskList widget"),
+    Key([mod, "control"], "8", lazy.window.down_opacity(), desc=""),
+    Key([mod, "control"], "9", lazy.window.up_opacity(), desc=""),
 
 
     # Move windows between left/right columns or move up/down in current stack.
@@ -65,7 +115,7 @@ keys = [
     Key([mod], "w", lazy.window.kill(), desc="Kill focused window"),
 
     Key([mod, "control"], "r", lazy.restart(), desc="Restart Qtile"),
-    Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
+#    Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
     Key([mod], "r", lazy.spawncmd(),
         desc="Spawn a command using a prompt widget"),
 ]
@@ -129,7 +179,7 @@ screens = [
                 ),
 
 #                widget.Battery(),
-                
+
                 widget.TextBox("dotfiles config", name="default"),
 #                widget.TextBox("Press &lt;M-r&gt; to spawn", foreground="#d75f5f"),
 #                widget.Systray(),
