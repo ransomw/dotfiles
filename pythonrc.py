@@ -1163,7 +1163,11 @@ def read_ics(filename):
 
 
 # todo: timezone-aware
-def ics_cal_busy_times_this_week(cal, disp=False):
+def ics_cal_busy_times_this_week(cal_or_file, disp=False):
+    if isinstance(cal_or_file, (ics.icalendar.Calendar,)):
+        cal = cal_or_file
+    else:
+        cal = read_ics(cal_or_file)
     today = dt.date.today()
     mon = today - timedelta(days=today.weekday())
     if today.weekday() in [5, 6]:
@@ -1360,7 +1364,7 @@ def mouse_only_ui(cmd_arg):
 #     'read_ics',
 # ], 'calendar'
 
-def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
+def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 
     if '.' in pyutils_pkg_name:
         raise ValueError()
@@ -1520,12 +1524,12 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
                     pymodule = libutils.get_string_module(
                         self.project, source, self.source)
                     # Adding new import
+                    from rope.refactor import importutils
                     source, imported = importutils.add_import(
                         self.project, pymodule, self._new_modname(dest), self.old_name)
                     source = source.replace(placeholder, imported)
                 from rope.base.change import ChangeContents
                 return ChangeContents(self.source, source)
-
 
 
 
@@ -1553,13 +1557,9 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
         return my_changes
 
 
-    fns_changes = [_make_changeset_for_one_fn(fn_name)
-                   for fn_name in fn_names]
-    all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
-    all_changes_description = all_changes.get_description()
+    fn_changes = _make_changeset_for_one_fn(fn_name)
+    fn_changes_description = fn_changes.get_description()
 
-    x = all_changes
-    y = all_changes_description
 
     validate_src_res = pythonrc_project.validate(pythonrc_module.get_resource())
     validate_dest_res = pythonrc_project.validate(dest_pkg)
@@ -1572,7 +1572,7 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
 
     ##
     input('take a moment to view the changes')
-    pydoc.pager(all_changes_description)
+    pydoc.pager(fn_changes_description)
     proceed = None
     while proceed is None:
         proceed_txt = input("perform the move? >[yes/no]>> ").strip()
@@ -1584,7 +1584,7 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
         _close()
         return
 
-    pythonrc_project.do(all_changes)
+    pythonrc_project.do(fn_changes)
 
     _close()
     return
@@ -1592,11 +1592,16 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
     pythonrc_ast: ast.Module = astor.code_to_ast.parse_file(
         pythonrc_resource.real_path)
 
+    fns_changes = [_make_changeset_for_one_fn(fn_name)
+                  for fn_name in fn_names]
+    all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
 
-currfn = lambda: rope_move_fns_from_pythonrc([
-    'ics_cal_busy_times_this_week',
+
+
+currfn = lambda: rope_move_fn_from_pythonrc(
+    # 'ics_cal_busy_times_this_week',
     'read_ics',
-], 'calendar')
+    'calendar')
 
 
 # todo: use `del` to unclutter locals()
