@@ -32,6 +32,9 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 
 from typing import (
     Dict,
+    List,
+    Hashable,
+    Tuple,
 )
 from collections import (
     namedtuple,
@@ -131,6 +134,8 @@ import queue
 import signal
 
 import time
+
+import ast
 
 import rlcompleter
 import readline
@@ -406,10 +411,29 @@ while True:
         import astor
         import rope
         import rope.base.project
+        from rope.base import libutils as rope_libutils
         from rope.base.project import (
             Project as RopeProject,
         )
+        from rope.base.resources import (
+            File as RopeFile,
+            Folder as RopeFolder,
+            Resource as RopeResource,
+        )
+        from rope.base.pyobjectsdef import (
+            PyModule as RopePyModule,
+        )
+        from rope.base.codeanalyze import (
+            SourceLinesAdapter as RopeSourceLinesAdapter,
+        )
+        from rope.base.change import (
+            ChangeSet as RopeChangeSet
+        )
         import rope.refactor.move
+        from rope.refactor.move import (
+            MoveGlobal as RopeMoveGlobal,
+            MoveModule as RopeMoveModule,
+        )
         import rope.refactor.multiproject
         import rope.contrib.generate
         import astor
@@ -1332,54 +1356,249 @@ def mouse_only_ui(cmd_arg):
 
 
 
+#     'ics_cal_busy_times_this_week',
+#     'read_ics',
+# ], 'calendar'
 
-def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
+def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
+
     if '.' in pyutils_pkg_name:
         raise ValueError()
     pyutils_rootdir = pth.dirname(pyutils.__file__)
     pythonrc_rootdir = pth.dirname(pyutils_rootdir)
-    pyutils_project = RopeProject(pyutils_rootdir)
+    # pyutils_project = RopeProject(pyutils_rootdir)
     pythonrc_project = RopeProject(pythonrc_rootdir)
     #
     pyutils_pkg_specifier = 'pyutils.'+pyutils_pkg_name
-    if pythonrc_project.find_module(pyutils_pkg_specifier) is not None:
-        raise Exception("create module unimpl")
-    new_pkg = rope.contrib.generate.create_package(pythonrc_project, pyutils_pkg_specifier)
-    #
 
-    fn_name = fn_names[0]
-    #
+    def _close():
+        pythonrc_project.close()
 
-    dest_pkg = new_pkg
+    def _ensure_pyutils_pkg(rope_project) -> RopeFolder:
+        found_pkg: RopeFolder = rope_project.find_module(pyutils_pkg_specifier)
+        if found_pkg is None:
+            new_pkg: RopeFolder = rope.contrib.generate.create_package(
+                rope_project, pyutils_pkg_specifier)
+            pyutils_pkg = new_pkg
+        else:
+            pyutils_pkg = found_pkg
+        assert isinstance(pyutils_pkg, (RopeResource,))
+        assert pyutils_pkg.name == pyutils_pkg_name
+        assert pyutils_pkg.is_folder()
+        name_to_pkg_file = {f.name: f for f in pyutils_pkg.get_files()}
+        assert '__init__.py' in name_to_pkg_file
+        init_py: RopeFile = name_to_pkg_file['__init__.py']
+        return pyutils_pkg
 
-    pythonrc_module = pythonrc_project.get_module('pythonrc.py')
 
-    move_offset = pythonrc_project.get_resource('pythonrc.py').read().index(fn_name)
-    pythonrc_ast = astor.code_to_ast(pythonrc_project.get_resource('pythonrc.py').read())
+    def _str_to_ast(fstr, fname):
+        """ astor.code_to_ast.parse_file extract """
+        fstr = fstr.replace('\r\n', '\n').replace('\r', '\n')
+        if not fstr.endswith('\n'):
+            fstr += '\n'
+        return ast.parse(fstr, filename=fname)
 
+    def _rope_file_to_ast(rope_file: RopeFile) -> ast.Module:
+        return _str_to_ast(rope_file.read(), rope_file.name)
+
+
+    def _rope_file_fn_bounds(rope_file: RopeFile, func_name: str) -> ast.Module:
+        file_str = rope_file.read()
+        module_ast = _str_to_ast(file_str, rope_file.name)
+        name_to_function_def: Dict[str, ast.FunctionDef] = {
+            node.name: node for node in module_ast.body
+            if isinstance(node, (ast.FunctionDef,))
+        }
+        if func_name not in name_to_function_def:
+            raise ValueError()
+        function_def = name_to_function_def[func_name]
+        bounds = {attr_name: getattr(function_def, attr_name)
+                  for attr_name in
+                  ['lineno', 'end_lineno',
+                   'col_offset', 'end_col_offset']}
+        file_lines = file_str.split('\n')
+        start_char = len('\n'.join(
+            file_lines[:function_def.lineno-1]
+        )) + function_def.col_offset + 1 # past trailing newline
+        end_char = len('\n'.join(
+            file_lines[:function_def.end_lineno-1]
+        )) + function_def.end_col_offset + 1
+        bounds.update(char=start_char, end_char=end_char)
+        return bounds
+
+
+    def _rope_module_fn_bounds(rope_module: RopePyModule, func_name: str) -> ast.Module:
+        module_ast = rope_module.get_ast()
+        name_to_function_def: Dict[str, ast.FunctionDef] = {
+            node.name: node for node in module_ast.body
+            if isinstance(node, (ast.FunctionDef,))
+        }
+        if func_name not in name_to_function_def:
+            raise ValueError()
+        function_def = name_to_function_def[func_name]
+        bounds = {attr_name: getattr(function_def, attr_name)
+                  for attr_name in
+                  ['lineno', 'end_lineno',
+                   'col_offset', 'end_col_offset']}
+        module_lines_adapter: RopeSourceLinesAdapter = rope_module.lines
+        file_lines = [module_lines_adapter.get_line(lineno)
+                      for lineno in range(module_lines_adapter.length())]
+        char = module_lines_adapter.get_line_start(
+            function_def.lineno
+        ) + function_def.col_offset
+        end_char = module_lines_adapter.get_line_start(
+            function_def.end_lineno
+        ) + function_def.end_col_offset
+        bounds.update(char=char, end_char=end_char)
+        return bounds
+
+
+    dest_pkg = _ensure_pyutils_pkg(pythonrc_project)
+
+
+    pythonrc_module: RopePyModule = pythonrc_project.get_module('pythonrc')
+    # pythonrc_resource: RopeFile = pythonrc_project.get_resource('pythonrc.py')
+    pythonrc_resource: RopeFile = pythonrc_module.get_resource()
+
+    #~ pythonrc_ast: ast.Module = _rope_file_to_ast(pythonrc_resource)
+    # pythonrc_module.get_ast()
+
+    def _make_changeset_for_one_fn(fn_name):
+        # fn_bounds = _rope_file_fn_bounds(pythonrc_resource, fn_name)
+        fn_bounds = _rope_module_fn_bounds(pythonrc_module, fn_name)
+        if fn_bounds['col_offset'] != 0:
+            Exception("expected a top-level function", (fn_name, fn_bounds,))
+        move_offset = fn_bounds["char"] + len('def ')
+
+        pythonrc_resource_str = pythonrc_resource.read()
+        move_offset_from_index = (pythonrc_resource_str
+                                  .index('\ndef '+fn_name) + len('\ndef '))
+
+        if move_offset != move_offset_from_index:
+            warn("ast and string index offsets differ")
+            proceed = None
+            while proceed is None:
+                proceed_txt = input("continue anyway? >[yes/no]>> ").strip()
+                if proceed_txt not in ['yes', 'no',]:
+                    print("please answer 'yes' or 'no'")
+                    continue
+                proceed = proceed_txt == 'yes'
+            if not proceed:
+                _close()
+                return
+
+
+
+        # breakpoint()
+
+        move_obj_for_typecheck = rope.refactor.move.create_move(
+            pythonrc_project,
+            pythonrc_module.get_resource(),
+            move_offset,
+        )
+        if not isinstance(move_obj_for_typecheck, (RopeMoveGlobal,)):
+            raise RuntimeError()
+
+        class MoveGlobalKeepSrcImports(RopeMoveGlobal):
+
+            def _source_module_changes(self, dest):
+                placeholder = '__rope_moving_%s_' % self.old_name
+                from rope.refactor.move import _ChangeMoveOccurrencesHandle
+                handle = _ChangeMoveOccurrencesHandle(placeholder)
+                from rope.refactor import occurrences
+                occurrence_finder = occurrences.create_finder(
+                    self.project, self.old_name, self.old_pyname)
+                start, end = self._get_moving_region()
+                from rope.refactor.move import ModuleSkipRenamer
+                renamer = ModuleSkipRenamer(occurrence_finder, self.source,
+                                            handle, start, end)
+                source = renamer.get_changed_module()
+                from rope.base import libutils
+                pymodule = libutils.get_string_module(self.project, source, self.source)
+                #~ source = self.import_tools.organize_imports(pymodule, sort=False)
+                if handle.occurred:
+                    pymodule = libutils.get_string_module(
+                        self.project, source, self.source)
+                    # Adding new import
+                    source, imported = importutils.add_import(
+                        self.project, pymodule, self._new_modname(dest), self.old_name)
+                    source = source.replace(placeholder, imported)
+                from rope.base.change import ChangeContents
+                return ChangeContents(self.source, source)
+
+
+
+
+        rope_move_obj = RopeMoveGlobal(
+            pythonrc_project,
+            pythonrc_module.get_resource(),
+            move_offset,
+        )
+        rope_changes = rope_move_obj.get_changes(dest_pkg)
+        rope_changes_description = rope_changes.get_description()
+
+        my_move_obj = MoveGlobalKeepSrcImports(
+            pythonrc_project,
+            pythonrc_module.get_resource(),
+            move_offset,
+        )
+        my_changes: RopeChangeSet = my_move_obj.get_changes(dest_pkg)
+        my_changes_description = my_changes.get_description()
+
+        x = my_changes
+        xx = rope_changes
+        y = my_changes_description
+        yy = rope_changes_description
+
+        return my_changes
+
+
+    fns_changes = [_make_changeset_for_one_fn(fn_name)
+                   for fn_name in fn_names]
+    all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
+
+    x = fns_changes
+    y = all_changes
     breakpoint()
 
-    move_obj = rope.refactor.move.create_move(
-        pythonrc_project,
-        pythonrc_module,
-        move_offset,
-    )
-    if not isinstance(move_obj, (rope.refactor.move.MoveGlobal,)):
-        raise RuntimeError()
-    changes = move_obj.get_changes(dest_pkg)
+    all_changes_description = all_changes.get_description()
+
+    x = all_changes
+    y = all_changes_description
+
+    validate_src_res = pythonrc_project.validate(pythonrc_module.get_resource())
+    validate_dest_res = pythonrc_project.validate(dest_pkg)
+    validate_project_res = pythonrc_project.validate(pythonrc_project.root)
+
+    if (validate_src_res is not None or
+        validate_dest_res is not None or
+        validate_project_res is not None):
+        raise Exception("validation fail")
+
+    ##
+    input('take a moment to view the changes')
+    pydoc.pager(all_changes_description)
+    proceed = None
+    while proceed is None:
+        proceed_txt = input("perform the move? >[yes/no]>> ").strip()
+        if proceed_txt not in ['yes', 'no',]:
+            print("please answer 'yes' or 'no'")
+            continue
+        proceed = proceed_txt == 'yes'
+    if not proceed:
+        _close()
+        return
+
+    pythonrc_project.do(changes)
+
+    _close()
+    return
+    fn_ast: ast.FunctionDef = astor.code_to_ast(globals()[fn_name])
+    pythonrc_ast: ast.Module = astor.code_to_ast.parse_file(
+        pythonrc_resource.real_path)
 
 
-    changes_description = changes.get_description()
-    print(changes_description)
-
-    breakpoint()
-
-    # pythonrc_project.do(changes)
-
-
-
-
-currfn = lambda: rope_move_fn_from_pythonrc([
+currfn = lambda: rope_move_fns_from_pythonrc([
     'ics_cal_busy_times_this_week',
     'read_ics',
 ], 'calendar')
