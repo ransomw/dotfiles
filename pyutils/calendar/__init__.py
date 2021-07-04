@@ -1,12 +1,39 @@
+import datetime as dt
+from datetime import timedelta
 import operator as op
 import os.path as pth
 import zipfile
 from functools import partial
 from operator import itemgetter as ig
-from pythonrc import compose_left, excepts, thread_last, first, ics, compose, groupby, get
-import datetime as dt
-from datetime import timedelta
-import pyutils.calendar
+import ics
+from toolz.functoolz import (
+    compose,
+    compose_left,
+    excepts,
+    thread_last,
+)
+from toolz.itertoolz import (
+    first,
+    groupby,
+)
+from toolz.curried import (
+    get,
+)
+
+def read_ics(filename):
+    try:
+        with zipfile.ZipFile(filename) as zf:
+            ics_name = thread_last(
+                zf.namelist(),
+                (filter, compose_left(pth.splitext, ig(-1), partial(op.eq, ".ics"))),
+                excepts((StopIteration,), first, handler=lambda _: None),
+            )
+            with zf.open(ics_name) as f:
+                cal = ics.Calendar(f.read().decode("utf-8"))
+    except zipfile.BadZipFile:
+        with open(filename) as f:
+            cal = ics.Calendar(f.read())
+    return cal
 
 
 # todo: timezone-aware
@@ -14,7 +41,7 @@ def ics_cal_busy_times_this_week(cal_or_file, disp=False):
     if isinstance(cal_or_file, (ics.icalendar.Calendar,)):
         cal = cal_or_file
     else:
-        cal = pyutils.calendar.read_ics(cal_or_file)
+        cal = read_ics(cal_or_file)
     today = dt.date.today()
     mon = today - timedelta(days=today.weekday())
     if today.weekday() in [5, 6]:
@@ -58,18 +85,3 @@ def ics_cal_busy_times_this_week(cal_or_file, disp=False):
             )
         )
 
-
-def read_ics(filename):
-    try:
-        with zipfile.ZipFile(filename) as zf:
-            ics_name = thread_last(
-                zf.namelist(),
-                (filter, compose_left(pth.splitext, ig(-1), partial(op.eq, ".ics"))),
-                excepts((StopIteration,), first, handler=lambda _: None),
-            )
-            with zf.open(ics_name) as f:
-                cal = ics.Calendar(f.read().decode("utf-8"))
-    except zipfile.BadZipFile:
-        with open(filename) as f:
-            cal = ics.Calendar(f.read())
-    return cal

@@ -139,7 +139,6 @@ import ast
 
 import rlcompleter
 import readline
-import pyutils.calendar
 readline.parse_and_bind("tab: complete")
 
 ###
@@ -393,7 +392,7 @@ while True:
             itemfilter,
         )
         import numpy as np
-        import ics
+
         import pandas as pd
         import openpyxl
         import openpyxl.utils.dataframe
@@ -441,6 +440,7 @@ while True:
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
+        from pyutils.calendar import (ics_cal_busy_times_this_week,)
         import pyutils.pyjuke as juke
         from pyutils.pastebin import pastebin_app
         from pyutils.cartography.osm import (
@@ -1292,11 +1292,6 @@ def mouse_only_ui(cmd_arg):
 
 
 
-
-#     'ics_cal_busy_times_this_week',
-#     'read_ics',
-# ], 'calendar'
-
 def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 
     if '.' in pyutils_pkg_name:
@@ -1529,21 +1524,6 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
                   for fn_name in fn_names]
     all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
 
-
-
-lastfn = lambda: rope_move_fn_from_pythonrc(
-    # 'ics_cal_busy_times_this_week',
-    'read_ics',
-    'calendar')
-
-
-def currfn():
-    rope_move_fn_from_pythonrc(
-        'read_ics',
-        'calendar')
-    rope_move_fn_from_pythonrc(
-    'ics_cal_busy_times_this_week',
-    'calendar')
 
 
 # todo: use `del` to unclutter locals()
