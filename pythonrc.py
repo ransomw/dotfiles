@@ -1556,11 +1556,6 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
     fns_changes = [_make_changeset_for_one_fn(fn_name)
                    for fn_name in fn_names]
     all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
-
-    x = fns_changes
-    y = all_changes
-    breakpoint()
-
     all_changes_description = all_changes.get_description()
 
     x = all_changes
@@ -1589,7 +1584,7 @@ def rope_move_fns_from_pythonrc(fn_names, pyutils_pkg_name):
         _close()
         return
 
-    pythonrc_project.do(changes)
+    pythonrc_project.do(all_changes)
 
     _close()
     return
