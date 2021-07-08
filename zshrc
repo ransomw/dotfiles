@@ -236,13 +236,31 @@ alias pip_prune='pip freeze | grep -Fvx -f requirements.txt - | xargs pip uninst
 alias hangups='hangups --col-scheme solarized-dark --key-prev-tab "ctrl p" --key-menu "ctrl o" --key-next-tab "ctrl n"'
 
 # 3ditors
-alias emacs='emacs -nw --no-desktop'
+alias temacs='emacs -nw --no-desktop' # t is for terminal
+# todo: xemacs to qtile mod4-r 'spawn' menu
 alias xemacs='emacsclient -c || (emacs --daemon --no-desktop && sleep 2.3 && emacsclient -c)'
 alias acme='acme -f $PLAN9/font/fixed/unicode.10x20.font'
 
+local -A _mpv_autofit_param_flags__ass_arr=(
+    'autofit-smaller' '80%x80%'
+    'autofit-larger' '80%x80%'
+)
 
-if [[ $(uname) = "FreeBSD" ]];then
-    alias mpv='/usr/local/bin/mpv --audio-device=oss//dev/dsp0.0'
+# todo: associative array (-A) to regular
+#   array (-a) conversion, here && and in
+#   cookbook.
+
+local -a mpv_autofit_param_flags=(
+    '--autofit-smaller=80%x80%'
+    '--autofit-larger=80%x80%'
+)
+
+
+
+if [[ "$(uname)" = "FreeBSD" ]];then
+    alias mpv='/usr/local/bin/mpv --audio-device=oss//dev/dsp0.0'" ${mpv_autofit_param_flags}"
+else
+    alias mpv='mpv'" ${mpv_autofit_param_flags}"
 fi
 
 alias mn='mpv --vid=no'
@@ -267,12 +285,13 @@ alias ddg='links http://www.duckduckgo.com'
 alias sd='python -m http.server 3003'
 alias ppath='print -- $PATH |sed "s/:/\n/g"'
 alias truncate='sed "s/^\(.\{$(($COLUMNS-3))\}\).*/\1$fg[cyan]$bold_color...$reset_color/"'
+# a-la Python
+alias reload='. ~/.zshrc'
 
 
 
 
-
-if [[ $(uname) = "FreeBSD" ]];then
+if [[ "$(uname)" = "FreeBSD" ]]; then
     alias handbook='links /usr/local/share/doc/freebsd/handbook/index.html'
 
     function dashbd() {
@@ -363,6 +382,16 @@ fi
 
 ##
 
+
+rand_int__1_to_5()
+{
+    if [[ "$(uname)" = "FreeBSD" ]]; then
+	      random -f <(seq 1 5) |head -1
+    else
+        1>2 print -- '`random` is bsd-specific(?)'
+        return 64
+    fi
+}
 
 
 #####
