@@ -1,13 +1,17 @@
 """
-This is the short end of the stick:
+This is..
 Welcome to your very own [drumroll]
 
-Behavior Modification Stimulus Toolkit
+_Behavior Modification Stimulus Toolkit_
 
 i.e. a package designed to produce stimuli
 designed to produce behavior modification.
 
-For starters, here, you will wrap
+TBDetermined
+
+_Neural Feedback Training (NFT)_
+
+For starters, here, will wrap
 * espeak
 * xmessage
 to issue you commands according
@@ -125,6 +129,4 @@ def start_timer_heartbeat():
         _timer_heartbeat_main,
     )
     __timer_heartbeat_proc.start()
-
-
 

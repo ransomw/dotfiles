@@ -1,3 +1,15 @@
+"""
+
+### todo:
+* _py_watch pass aliased kwargs dbg
+  (currently kwargs are hardcoded
+   in body of defn)
+* `some_res = some_defn()` ->`print(_print_dashbd_runs__out)`/
+   |_.--> async stream results: don't wait  <--._|
+    on entire results to print before displaying
+
+"""
+
 import time
 import sys
 import enum
@@ -566,8 +578,6 @@ def _py_watch(some_defn,
                     else:
                         print("didn't read results out")
                 # todo:
-                # --> async stream results: don't wait
-                #   on entire results to print before displaying
                 print(_print_dashbd_runs__out)
             if debug:
                 print('sleeping ', n,'seconds')
