@@ -2,6 +2,12 @@
 webapp to store notes and files.
 
 ### todo
+* BUG - paste one file,
+        then paste another.
+  expect: both pastes saved
+  actual: page errors *[0]
+    _WITHOUT_ page reload
+
 * non-blocking app start
   - pastebin_app() returns an object
     and interpreter prompt reappears
@@ -15,6 +21,46 @@ webapp to store notes and files.
 * multiple files per item
 * rename
 """
+[
+    """
+### request
+
+##### headers
+POST / HTTP/1.1
+Host: 192.168.1.64:5005
+Connection: keep-alive
+Content-Length: 1129
+Pragma: no-cache
+Cache-Control: no-cache
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; FreeBSD amd64; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36
+Origin: http://192.168.1.64:5005
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryUrVe30DyIvjrpW1y
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.1.64:5005/
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+
+##### body
+
+
+### response
+
+##### headers
+HTTP/1.1 400 BAD REQUEST
+Content-Type: text/html; charset=utf-8
+Content-Length: 192
+Date: Mon, 05 Jul 2021 00:24:29 GMT
+Server: Python/3.8 aiohttp/3.7.4.post0
+
+
+##### body
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>The browser (or proxy) sent a request that this server could not understand.</p>
+""",
+]
 
 import asyncio
 from io import (
