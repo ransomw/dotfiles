@@ -37,6 +37,11 @@ quote_lines()
     sed "s/^\(.*\)$/'\1'/"
 }
 
+shuffle_array()
+{
+
+}
+
 
 ###
 
@@ -202,3 +207,60 @@ __espeak_seq__behav()
     print -- "ran from $start to $end"
 }
 
+
+##
+# vim task list
+
+vim_task_list()
+{
+	typeset -a files_sequences
+
+
+	for fs_seq in files_sequences; do true; done
+
+##### vim /home/ransom/.aliasrc /home/ransom/.dotfiles/zshrc && print -n -- that "do the trick"???> && if [[ "$(read 1)" != N ]]; then vim /home/ransom/.dotfiles/zshrc /home/ransom/.dotfiles/shutils/zsh_fn_scratch.sh ; fi
+}
+
+
+##########
+
+##~~~~~~~
+# linting
+# >> pre-commit or s'th before hand-rolling too many blank checks
+#
+
+file_haz__indent_tabs_and_spaces()
+{
+	f=$1
+	if $(cat "${f}" |grep -q -E '^t' && cat "${f}" |grep -q -E '^ ');
+	then
+		return 0
+	else
+		return 1
+	fi
+}
+
+
+file_haz__max_chars_per_line()
+{
+    f=$1
+    m=$2
+
+    max_chars=$(wc -L $f)
+
+    if [[ $max_chars -leq $m ]];
+       return 0
+       else
+           return 1
+    fi
+
+    return 0
+
+    cat $f |while read l; do
+        if print $l |wc    $l; then
+            return 1
+        fi
+    done
+}
+
+#~~~~~~~~
