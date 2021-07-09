@@ -12,6 +12,15 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 
 ### todo
 * refactor (using rope) into pyutil
+* conn gg Photos.
+* droplet / bucket / gcloud
+  |_--< low-Trust of thumb drives AND spinning
+  ..---++intro to req., here <<<EO_ThHyerOrdTHOT
+    prioritizing (FOT)
+        connect generic stor (DO droplet)
+           **after** _or_ **before**
+        domain-specific stor (gg Photos)
+EO_ThHyerOrdTHOT
 * lint, gofmt-alike, trailing whitespace
   - pylintrc
   - pylint ASTeroid checker(s), if only for example
@@ -19,15 +28,52 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 * auto-generate documentation
   - sphinx (?)
   - generate todos from this markdown format
+* maintain and/or generate breakpoints list
+  |_--> keep a bunch && toggle, don't waste
+        time [staring at the computer, typ-
+        -ing `breakpoint()` over && over.
+  - also, cram a bunch of data into `tabulate`
+    and inject a special variable into pdb.
 * music player
+  - read metadata
+  - access & cache album art, credits, etc.
+    from wikipedia, allmusic, bandcamp, etc.
+  - qtile integration (volume, disp toggle)
+--- +eFmt(s)
+  - annot playback (eg Tuple[timestamp...])
+    (ie "verse|chorus|bridge", "measures
+     _ to _") within an indiv piece
+  - mix *at most* two (Th) << multiproc
+    (eg "i can play [dylan|hendrix]'s _
+     over _.  same song" 19',20' phenomenon)
+    (ie global annotations)
+  - equalizer & effects
 * mic access
 * camera access
+* tab-complete python names (w/ rope)
+  in at least one editor
 * plivo (or twilio fallback) text msgs
 * image view & editing
   - scaled .
 * document view & editing
   - 4-in-1 pdf
   - pdf text extraction (non-OCR)
+* generative music / ambient noise
+  - binaural beats-type
+  - bytebeat
+  - etc.
+*
+......onecet an py-chemist has
+     .... <<will i want more>>
+/\//____/\/\//\\/\///\/\/\\/\//\/
+../  |   /\  |\  |> get other phone
+\/|\ |  /--\ | \ |droid (from storage)
+/\| \| /    \|  \|> install android build
+西 \ |                  on a laptop
+   \_|__            (fuschia, 茹果渴能)
+
+and leave this
+  to   bury
 """
 
 from typing import (
@@ -136,6 +182,9 @@ import signal
 import time
 
 import ast
+
+import socket
+import ipaddress
 
 import rlcompleter
 import readline
@@ -451,6 +500,9 @@ while True:
         )
         from pyutils.cartography.test_osm import (
             TEST_MAP as TEST_OSM_MAP
+        )
+        from pyutils.py_alarm_call.dashbd import (
+            dashbd,
         )
         sys.path.pop()
 
@@ -1450,10 +1502,191 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 mv_fn = rope_move_fn_from_pythonrc
 
 
+###
+
+class NetmapError(Exception):
+    pass
+
+
+class NetmapParseError(ValueError, NetmapError):
+    pass
+
+
+def _get_own_ip():
+    raise NotImplementedError()
+
+
+def _is_port_open(
+        ip_addr,
+        port_no,
+) -> bool:
+    addr = (str(ip_addr), port_no,)
+    try:
+        conn = socket.create_connection(addr)
+    except ConnectionRefusedError:
+        return False
+    conn.close()
+    return True #...#
+    sock = socket.socket(
+        socket.AF_INET,
+        socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
+    sock.connect(addr)
+
+
+def _is_port_open_direct_lib(
+        ip_addr,
+        port_no,
+) -> bool:
+    addr = (str(ip_addr), port_no,)
+    try:
+        conn = socket.create_connection(addr)
+    except ConnectionRefusedError:
+        return False
+    conn.close()
+    return True #...#
+    sock = socket.socket(
+        socket.AF_INET,
+        socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
+    sock.connect(addr)
+
+
+
+def _port_scan_single_host(host, ports,
+                           scan_method='high-lvl',):
+    scan_method__create_connection = ['high-lvl', 'low-lvl',
+                           'hi', 'lo',
+                           'create_connection', 'direct_lib']
+    scan_method__direct_lib = ['high-lvl', 'low-lvl',
+                           'hi', 'lo',
+                           'create_connection', 'direct_lib']
+    assert scan_method in ['high-lvl', 'low-lvl',
+                           'hi', 'lo',
+                           'create_connection', 'direct_lib']
+    rv = {}
+    for port in ports:
+        print("scanning port", port)
+        single_port_res: bool = _is_port_open_direct_lib(host, port)
+        single_port_res: bool = _is_port_open(host, port)
+
+        rv.update({port: single_port_res})
+    return rv
+
+
+def port_scan(host_or_hosts, ports: List[int]):
+
+    def _parse_host(maybe_host):
+        try:
+            host = str(ipaddress.ip_address(str(host_or_hosts)))
+        except Exception as err:
+            breakpoint() # get exception class
+            raise NetmapParseError("", (err,))
+        return host
+
+
+    def _parse_hosts(hosts):
+        if isinstance(hosts, (list, tuple, iter)):
+            return [_parse_hosts(host)
+                    for host in hosts]
+        if isinstance(hosts, (str,)):
+            pass
+
+
+    def _coerce_ports(port_or_ports):
+        ports = None
+        if isinstance(port_or_ports, int):
+            ports = [port_or_ports]
+        if isinstance(port_or_ports, (list, tuple, set,)):
+            ports = list(port_or_ports)
+            if not all([isinstance(p, int) for p in ports]):
+                raise NetmapParseError(
+                    "recursive port coercion unimpl"
+                )
+        if ports is None:
+            raise NetmapParseError()
+        return ports
+
+
+    single_host = None
+    try:
+        single_host = _parse_host(host_or_hosts)
+    except NetmapParseError:
+        pass
+    if single_host is not None:
+        hosts = [single_host]
+    else:
+        hosts = _parse_hosts(host_or_hosts)
+    rv = {}
+    for host in hosts:
+        print("scanning host", host)
+        single_host_res = _port_scan_single_host(host,
+                                                 # ports,
+                                                 _coerce_ports(ports),
+                                                 )
+        rv.update(**{str(host): single_host_res})
+
+    breakpoint()
+
+    return rv
+
+
+def is_pastebin_up():
+    port_scan(_get_own_ip(), [5003, 5005])
+
+
+currfn = lambda: _is_port_open('192.168.1.64', 5005)
+currfn = lambda: port_scan('192.168.1.64', 5005)
+def _mount_unmounted_usb_thumb__freebsd():
+    raise NotImplementedError()
+
+###
+
+import subprocess as sp
+def _mount_unmounted_usb_thumb():
+    if (sp.run('uname', stdout=sp.PIPE, check=True).stdout.decode('utf-8').strip()
+        !=
+        'FreeBSD'):
+        raise NotImplementedError()
+    return _mount_unmounted_usb_thumb__freebsd()
+
+mount_usb = lambda: _mount_unmounted_usb_thumb
+
+
+def _man_viewer__freebsd(name, sec=1):
+    raise NotImplementedError()
+
+
+def man_viewer():
+    """
+    interactive, follow links, ManManPages, ....
+    """
+    if (sp.run('uname', stdout=sp.PIPE, check=True).stdout.decode('utf-8').strip()
+        !=
+        'FreeBSD'):
+        raise NotImplementedError()
+    __man_viewer__freebsd()
+
+
+#########################################
+
+
+currdefns = {defn.__name__: defn for defn
+             in [
+
+                 ]}
+
+for varname in [
+        'mv_fn',
+        '',
+        'mount_usb',]:
+    pass
+
+
 # todo: use `del` to unclutter locals()
 
 
 #########################################
+
+
 
 def thread_loop_demo():
 
