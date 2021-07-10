@@ -91,6 +91,15 @@
           (end-of-buffer) (insert "\n"))
         (widen)))))
 
+
+;;;;
+;; maintain an assoc list,
+;;     name -> location
+;; setter + getter nested in "goto marker" defun
+;;
+;; ### todo
+;; * tab-complete in nested getter minibuffer
+;; *~ take naming convention more seriously
 (setq marker-names ())
 (defun set-marker-name ()
   (interactive)
@@ -239,3 +248,79 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
     (if (eq curr-js-mode 'js2-mode)
         (setf (cdr js-mode-cons-cell) 'javascript-mode)
       (setf (cdr js-mode-cons-cell) 'js2-mode))))
+
+
+;; todo: determine idiomatic else clause for `cond`
+(defun my-enlarge-window (parg)
+  (interactive "P")
+  (let ((largest-possible-vertical-window-lines-imaginable
+         10000))
+    (if parg
+        (cond
+         ((= parg 0) (enlarge-window largest-possible-vertical-window-lines-imaginable))
+         (
+          (= 1 1)
+          ;; 't
+
+          (if 't
+              (print "nonzero ")
+              (enlarge-window arg))
+
+          ))
+      (enlarge-window 1))))
+
+(my-enlarge-window)
+
+
+
+
+
+;;;;
+;; to python-mode
+
+(defun py--vars-to-dict ()
+  (interactive)
+  ;; tood: pass `fn-name-to-key-name`, lisp unquote, apply HERE
+  (let* ((default-fn-name-to-key-name
+           (lambda (x) x)))
+    (save-excursion (replace-regexp "^ *" ""))
+    (save-excursion
+      (replace-regexp "^\\(.*\\)$"
+                      (concat "'\\1': "
+                              ;; HERE-ish : here except for the gexp.
+                              ;; may req. "totally different" method wherein all names are avail as list of strings.
+                              "\\1"
+                              ",")))
+    (beginning-of-buffer)
+    (insert "{\n")
+    (end-of-buffer)
+    (insert "}\n")))
+
+
+;;;;;;;;;;;;;;;; *S*C*R*A*T*C*H
+
+(progn
+  (eq 't (= 1 1))
+  (cond ((= 1 100) 2)
+      ((=  '()) ""))
+  nil
+
+
+  (cond ((eq parg '()) (print "arg is nil"))
+        ('t (print "arg is not nil"))
+        )
+  (cond ((eq parg '()) (print "arg is nil"))
+        ('t (print "arg is not nil"))
+        )
+  (defun vestigate--ineractive
+      (arg buf) "Doc string"
+      (let
+          ((interactive-argstr "P\nbbuffer: "))
+        (interactive interactive-argstr)
+        (insert (format
+                "(interactive) investigation with arg to interactive '%s' resulting in 2-ary function (%s) (%s)"
+                interactive-argstr arg buf))))
+
+
+
+  )

@@ -1,3 +1,7 @@
+;; ### todo
+;; * auto-installer a-la `pythonrc.py`
+
+
 (setq-default show-trailing-whitespace t)
 (display-time-mode 0)
 (put 'downcase-region 'disabled nil)

@@ -5,6 +5,10 @@
 ;; zprint elisp buffers
 ;; toggle scroll bar for one buffer at an time:
 ;;     not toggle all buffers
+;;
+;; 熙一前总什 非卵卧 .. and wherrar the fixed-width emacs fonts?
+;;                 咋 :/ how to determine the font of a particular character in emacs?
+;;
 ;;;;;;;;;
 
 ;;;

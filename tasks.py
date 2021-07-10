@@ -30,6 +30,38 @@ from invoke import exceptions as exc
 
 bp = breakpoint
 
+class ProgrammingError(Exception):
+    pass
+
+
+def _parse_ifconfig_output(
+        ifconfig_str):
+    ifconfig_lines = ifconfig_str.split('\n')
+    ifname = None
+    ifname_to_config_lines = {}
+    for line in ifconfig_lines:
+        if line[0] != ' ':
+            ifname = line.split(':')[0]
+            ifname_to_config_lines[ifname] = [line]
+            continue
+        if ifname is None:
+            raise ProgrammingError()
+        ifname_to_config_lines[ifname].append(line)
+    return {}
+
+@task
+def find_router(
+        c,
+):
+    ifconfig_res = c.run('/sbin/ifconfig', hide=True,)
+    ifconfig_out_parsed = _parse_ifconfig_output(ifconfig_res.stdout)
+    ip_addr = '192.168.1.65'
+    ip_addr_range = '.'.join(ip_addr.split('.')[:3]+['0-255'])
+    # ping scan
+    c.run('nmap -sn '+ip_addr_range)
+
+
+
 @task
 def dir_diff(
         c,
@@ -108,3 +140,10 @@ def replace_string(
             replacement,
             filepath,
         )
+
+
+@task
+def build_docs(c):
+    with c.cd('doc'):
+        c.run('sphinx-build')
+
