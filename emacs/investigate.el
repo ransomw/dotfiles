@@ -5,6 +5,10 @@
 ;; zprint elisp buffers
 ;; toggle scroll bar for one buffer at an time:
 ;;     not toggle all buffers
+;;
+;; 熙一前总什 非卵卧 .. and wherrar the fixed-width emacs fonts?
+;;                 咋 :/ how to determine the font of a particular character in emacs?
+;;
 ;;;;;;;;;
 
 ;;;
@@ -123,9 +127,7 @@ Use this command in a compilation log buffer."
   (read-from-minibuffer "got all tHat???")
   (read-from-minibuffer "doesn't matter anyway 💕☺💕😊💕")
   (cge-helper event)
-
   )
-
 
 
 (nth 1 '(1 2 3))
@@ -140,3 +142,32 @@ Use this command in a compilation log buffer."
       (car (get-text-property (point) 'compilation-directory)))
    (setq compilation-current-error (point))
    (next-error-internal)))
+
+
+;;; END "goal"
+
+;;;;
+
+;;;;;;;;;;;;;;;; *S*C*R*A*T*C*H
+
+
+;; (progn
+;;   (eq 't (= 1 1))
+;;   (cond ((= 1 100) 2)
+;;       ((=  '()) ""))
+;;   nil
+;;   (cond ((eq parg '()) (print "arg is nil"))
+;;         ('t (print "arg is not nil"))
+;;         )
+;;   (cond ((eq parg '()) (print "arg is nil"))
+;;         ('t (print "arg is not nil"))
+;;         )
+;;   (defun vestigate--ineractive
+;;       (arg buf) "Doc string"
+;;       (let
+;;           ((interactive-argstr "P\nbbuffer: "))
+;;         (interactive interactive-argstr)
+;;         (insert (format
+;;                 "(interactive) investigation with arg to interactive '%s' resulting in 2-ary function (%s) (%s)"
+;;                 interactive-argstr arg buf))))
+;;   )
