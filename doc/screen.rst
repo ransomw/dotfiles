@@ -37,9 +37,39 @@ so `C-a 0` - `4` are available
 
 * `C-a` : previously selected terminal
 
-motion in terminal buffer
--------------------------
+copy mode ..or
+--------------
 
-**todo** `tmux` `C-b [`-like
+**scrollback** mode
+
+allows cursor motion in terminal buffer
 
 
+* `[` `C-[` and `<esc>` : enter copy mode
+* `q` and `<esc><esc>` (Esc key double-press) : exit from copy mode, returning to terminal prompt
+
+is about the same as `tmux`.
+
+* `h` `j` `k` `l` : movement `vim`-style.
+  `0``$``C-u``C-d``b``w`... also
+
+_???_ no numerical prefixes on `vim`-alikes
+
+
+**yank**/**copy** _todo_
+
+
+
+Input Method
+------------
+
+allow screen to send input (other than pass-through)
+to the terminal
+
+* `C-v` : enter digraph (minibuffer prompt)
+
+a digraph is a character indexed by a pair of characters
+
+**todo** find out where the digraph table is stored, how to modify
+
+_eg_ -- `o"` at the prompt results in `ö`
