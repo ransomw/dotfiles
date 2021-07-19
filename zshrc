@@ -280,9 +280,20 @@ alias mpvs='mpv --shuffle'
 
 ## imagined stuff ☺😊
 
+serve_directory() {
+    port=$1
+    if [[ "$port" = '' ]]; then
+        port=3003
+    fi
+    python -m http.server $port
+}
+
 alias ddg='links http://www.duckduckgo.com'
-# serve directory
-alias sd='python -m http.server 3003'
+
+alias sd=serve_directory
+alias serve_simple=sd
+alias ssrv=sd
+
 alias ppath='print -- $PATH |sed "s/:/\n/g"'
 alias truncate='sed "s/^\(.\{$(($COLUMNS-3))\}\).*/\1$fg[cyan]$bold_color...$reset_color/"'
 # a-la Python
@@ -393,5 +404,10 @@ rand_int__1_to_5()
     fi
 }
 
+open_next_indexed_directory()
+{
+    indexed_dirs_str = $(find . -type d -maxdepth 1 |grep -v '^\.$' |sed 's/\.\///' | grep '^\d$' |sort)
+    return 64
+}
 
 #####
