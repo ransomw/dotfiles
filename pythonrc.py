@@ -35,6 +35,9 @@ EO_ThHyerOrdTHOT
   - also, cram a bunch of data into `tabulate`
     and inject a special variable into pdb.
 * music player
+  - "lock" mode: only responsive on specific keypress
+    ( or sequence thereof) - displaying sequnce
+    on other key.  thisisnot a security feature.
   - read metadata
   - access & cache album art, credits, etc.
     from wikipedia, allmusic, bandcamp, etc.
@@ -43,6 +46,7 @@ EO_ThHyerOrdTHOT
   - annot playback (eg Tuple[timestamp...])
     (ie "verse|chorus|bridge", "measures
      _ to _") within an indiv piece
+  - Dict[float, _]: playback speed to (eg) cpu usage
   - mix *at most* two (Th) << multiproc
     (eg "i can play [dylan|hendrix]'s _
      over _.  same song" 19',20' phenomenon)
@@ -206,6 +210,17 @@ def gmn(*args, **kwargs):
 
 def gs(*args, **kwargs):
     pydoc.pager(getsource(*args, **kwargs))
+
+
+def getsourcefiles(*args, **kwargs):
+    getsource_results = [getsource(arg, **kwargs)
+                         for arg in args]
+    sources_string = (
+        '#<<<\n'+'\n#<<<\n'.join(getsource_results)
+    )
+    pydoc.pager(
+        sources_string
+    )
 
 
 inc = lambda x: x + 1
@@ -504,6 +519,7 @@ while True:
         from pyutils.py_alarm_call.dashbd import (
             dashbd,
         )
+        from pyutils import cookbook as cb
         sys.path.pop()
 
     except ModuleNotFoundError as err:
@@ -1671,7 +1687,7 @@ def man_viewer():
 
 currdefns = {defn.__name__: defn for defn
              in [
-
+                 python_viewer_urwid,
                  ]}
 
 for varname in [
