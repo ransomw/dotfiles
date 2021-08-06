@@ -493,10 +493,6 @@ while True:
         )
         import numpy as np
 
-        import pandas as pd
-        import openpyxl
-        import openpyxl.utils.dataframe
-        import requests
         import npyscreen
 
         # without Qt install (see python.conf)
@@ -586,22 +582,6 @@ plot_osm = plot_open_street_map_xml = compose(plot_osm_shp, osm_to_shp)
 plot_osm_demo = lambda: plot_osm(TEST_OSM_MAP)
 
 
-def xlst_to_dataframes(filepath):
-    wb = openpyxl.load_workbook(filepath)
-    return {sn: pd.DataFrame(wb[sn].values) for sn in wb.sheetnames}
-
-
-def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
-    wb = openpyxl.Workbook()
-    wb.active
-    for (nm, df) in dfs.items():
-        ws = wb.create_sheet(nm)
-        ws.title
-        for row in openpyxl.utils.dataframe.dataframe_to_rows(
-            df, index=True, header=True
-        ):
-            ws.append(row)
-    wb.save(filepath)
 
 ##>>>##
 
@@ -615,6 +595,65 @@ def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
 
 # activity to minutes
 _TIME_ESTIMATE = {}
+
+
+def rainbow_print(text):
+    # Codes listed are from ECMA-48, Section 8.3.117, p. 61.
+    # extracted from /usr/local/share/zsh/5.8/functions/Misc/colors
+    ##
+    # Attribute codes:
+    _ATTRS = {
+        name: '\033['+code+'m'
+        for (code, name) in (
+      ('00', 'none'),
+      ('01', 'bold'),
+      ('02', 'faint'),
+        ('22', 'normal'),
+      ('03', 'standout'),
+               ('23', 'no-standout'),
+      ('04', 'underline'),
+          ('24', 'no-underline'),
+      ('05', 'blink'),
+        ('25', 'no-blink'),
+      ('07', 'reverse'),
+        ('27', 'no-reverse'),
+      ('08', 'conceal'),
+        ('28', 'no-conceal'),
+                )}
+    # Text color codes:
+    _COLORS = {
+        name: '\033['+code+'m'
+        for (code, name) in (
+      ('30', 'black'),
+        ('40', 'bg-black'),
+      ('31', 'red'),
+        ('41', 'bg-red'),
+      ('32', 'green'),
+        ('42', 'bg-green'),
+      ('33', 'yellow'),
+        ('43', 'bg-yellow'),
+      ('34', 'blue'),
+        ('44', 'bg-blue'),
+      ('35', 'magenta'),
+        ('45', 'bg-magenta'),
+      ('36', 'cyan'),
+        ('46', 'bg-cyan'),
+      ('37', 'white'),
+        ('47', 'bg-white'),
+    )}
+    _COLOR_DEFAULTS = {
+        name: '\033['+code+'m'
+        for (code, name) in (
+      ('39', 'default'),
+        ('49', 'bg-default'),
+                )}
+    color_names = [color_name for color_name in
+                   _COLORS.keys()
+                   if not color_name.startswith('bg-')]
+    for color_name, char in zip(color_names*math.ceil(len(text)/len(color_names)), text):
+        print(_COLORS[color_name]+char, end='')
+    print(_ATTRS['none'])
+
 
 
 def _espeak_text(
@@ -828,63 +867,6 @@ def edit_text_terminal_curses(text):
     return message
 
 
-
-def rainbow_print(text):
-    # Codes listed are from ECMA-48, Section 8.3.117, p. 61.
-    # extracted from /usr/local/share/zsh/5.8/functions/Misc/colors
-    ##
-    # Attribute codes:
-    _ATTRS = {
-        name: '\033['+code+'m'
-        for (code, name) in (
-      ('00', 'none'),
-      ('01', 'bold'),
-      ('02', 'faint'),
-        ('22', 'normal'),
-      ('03', 'standout'),
-               ('23', 'no-standout'),
-      ('04', 'underline'),
-          ('24', 'no-underline'),
-      ('05', 'blink'),
-        ('25', 'no-blink'),
-      ('07', 'reverse'),
-        ('27', 'no-reverse'),
-      ('08', 'conceal'),
-        ('28', 'no-conceal'),
-                )}
-    # Text color codes:
-    _COLORS = {
-        name: '\033['+code+'m'
-        for (code, name) in (
-      ('30', 'black'),
-        ('40', 'bg-black'),
-      ('31', 'red'),
-        ('41', 'bg-red'),
-      ('32', 'green'),
-        ('42', 'bg-green'),
-      ('33', 'yellow'),
-        ('43', 'bg-yellow'),
-      ('34', 'blue'),
-        ('44', 'bg-blue'),
-      ('35', 'magenta'),
-        ('45', 'bg-magenta'),
-      ('36', 'cyan'),
-        ('46', 'bg-cyan'),
-      ('37', 'white'),
-        ('47', 'bg-white'),
-    )}
-    _COLOR_DEFAULTS = {
-        name: '\033['+code+'m'
-        for (code, name) in (
-      ('39', 'default'),
-        ('49', 'bg-default'),
-                )}
-    color_names = [color_name for color_name in
-                   _COLORS.keys()
-                   if not color_name.startswith('bg-')]
-    for color_name, char in zip(color_names*math.ceil(len(text)/len(color_names)), text):
-        print(_COLORS[color_name]+char, end='')
-    print(_ATTRS['none'])
 
 
 
@@ -1238,7 +1220,7 @@ def mouse_only_ui(cmd_arg):
 
 
 
-def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
+def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
 
     if '.' in pyutils_pkg_name:
         raise ValueError()
@@ -1276,33 +1258,9 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
             fstr += '\n'
         return ast.parse(fstr, filename=fname)
 
+
     def _rope_file_to_ast(rope_file: RopeFile) -> ast.Module:
         return _str_to_ast(rope_file.read(), rope_file.name)
-
-
-    def _rope_file_fn_bounds(rope_file: RopeFile, func_name: str) -> ast.Module:
-        file_str = rope_file.read()
-        module_ast = _str_to_ast(file_str, rope_file.name)
-        name_to_function_def: Dict[str, ast.FunctionDef] = {
-            node.name: node for node in module_ast.body
-            if isinstance(node, (ast.FunctionDef,))
-        }
-        if func_name not in name_to_function_def:
-            raise ValueError()
-        function_def = name_to_function_def[func_name]
-        bounds = {attr_name: getattr(function_def, attr_name)
-                  for attr_name in
-                  ['lineno', 'end_lineno',
-                   'col_offset', 'end_col_offset']}
-        file_lines = file_str.split('\n')
-        start_char = len('\n'.join(
-            file_lines[:function_def.lineno-1]
-        )) + function_def.col_offset + 1 # past trailing newline
-        end_char = len('\n'.join(
-            file_lines[:function_def.end_lineno-1]
-        )) + function_def.end_col_offset + 1
-        bounds.update(char=start_char, end_char=end_char)
-        return bounds
 
 
     def _rope_module_fn_bounds(rope_module: RopePyModule, func_name: str) -> ast.Module:
@@ -1332,107 +1290,72 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 
 
     dest_pkg = _ensure_pyutils_pkg(pythonrc_project)
-
-
     pythonrc_module: RopePyModule = pythonrc_project.get_module('pythonrc')
-    # pythonrc_resource: RopeFile = pythonrc_project.get_resource('pythonrc.py')
     pythonrc_resource: RopeFile = pythonrc_module.get_resource()
 
-    #~ pythonrc_ast: ast.Module = _rope_file_to_ast(pythonrc_resource)
-    # pythonrc_module.get_ast()
-
-    def _make_changeset_for_one_fn(fn_name):
-        # fn_bounds = _rope_file_fn_bounds(pythonrc_resource, fn_name)
+    def _make_move_obj_for_one_fn(fn_name):
         fn_bounds = _rope_module_fn_bounds(pythonrc_module, fn_name)
         if fn_bounds['col_offset'] != 0:
             Exception("expected a top-level function", (fn_name, fn_bounds,))
         move_offset = fn_bounds["char"] + len('def ')
 
-        pythonrc_resource_str = pythonrc_resource.read()
-        move_offset_from_index = (pythonrc_resource_str
-                                  .index('\ndef '+fn_name) + len('\ndef '))
 
-        if move_offset != move_offset_from_index:
-            warn("ast and string index offsets differ")
-            proceed = None
-            while proceed is None:
-                proceed_txt = input("continue anyway? >[yes/no]>> ").strip()
-                if proceed_txt not in ['yes', 'no',]:
-                    print("please answer 'yes' or 'no'")
-                    continue
-                proceed = proceed_txt == 'yes'
-            if not proceed:
-                _close()
-                return
-
-
-
-        # breakpoint()
-
-        move_obj_for_typecheck = rope.refactor.move.create_move(
-            pythonrc_project,
-            pythonrc_module.get_resource(),
-            move_offset,
-        )
-        if not isinstance(move_obj_for_typecheck, (RopeMoveGlobal,)):
+        if not isinstance(
+                rope.refactor.move.create_move(
+                    pythonrc_project,
+                    pythonrc_module.get_resource(),
+                    move_offset,
+                ), (
+            RopeMoveGlobal,
+        )):
             raise RuntimeError()
 
+        from rope.refactor.move import _ChangeMoveOccurrencesHandle
+        from rope.refactor import occurrences
+        from rope.refactor.move import ModuleSkipRenamer
+        from rope.base import libutils
+        from rope.refactor import importutils
+        from rope.base.change import ChangeContents
         class MoveGlobalKeepSrcImports(RopeMoveGlobal):
 
             def _source_module_changes(self, dest):
                 placeholder = '__rope_moving_%s_' % self.old_name
-                from rope.refactor.move import _ChangeMoveOccurrencesHandle
                 handle = _ChangeMoveOccurrencesHandle(placeholder)
-                from rope.refactor import occurrences
                 occurrence_finder = occurrences.create_finder(
                     self.project, self.old_name, self.old_pyname)
                 start, end = self._get_moving_region()
-                from rope.refactor.move import ModuleSkipRenamer
                 renamer = ModuleSkipRenamer(occurrence_finder, self.source,
                                             handle, start, end)
                 source = renamer.get_changed_module()
-                from rope.base import libutils
                 pymodule = libutils.get_string_module(self.project, source, self.source)
                 #~ source = self.import_tools.organize_imports(pymodule, sort=False)
                 if handle.occurred:
                     pymodule = libutils.get_string_module(
                         self.project, source, self.source)
                     # Adding new import
-                    from rope.refactor import importutils
                     source, imported = importutils.add_import(
                         self.project, pymodule, self._new_modname(dest), self.old_name)
                     source = source.replace(placeholder, imported)
-                from rope.base.change import ChangeContents
                 return ChangeContents(self.source, source)
 
 
-
-        rope_move_obj = RopeMoveGlobal(
+        return MoveGlobalKeepSrcImports(
             pythonrc_project,
             pythonrc_module.get_resource(),
             move_offset,
         )
-        rope_changes = rope_move_obj.get_changes(dest_pkg)
-        rope_changes_description = rope_changes.get_description()
-
-        my_move_obj = MoveGlobalKeepSrcImports(
-            pythonrc_project,
-            pythonrc_module.get_resource(),
-            move_offset,
-        )
-        my_changes: RopeChangeSet = my_move_obj.get_changes(dest_pkg)
-        my_changes_description = my_changes.get_description()
-
-        x = my_changes
-        xx = rope_changes
-        y = my_changes_description
-        yy = rope_changes_description
-
-        return my_changes
 
 
-    fn_changes = _make_changeset_for_one_fn(fn_name)
-    fn_changes_description = fn_changes.get_description()
+    my_changes = None
+    for fn_name in fn_names:
+        my_move_obj = _make_move_obj_for_one_fn(fn_name)
+        fn_changes: RopeChangeSet = my_move_obj.get_changes(dest_pkg)
+        if my_changes is None:
+            my_changes = fn_changes
+        else:
+            my_changes.add_change(fn_changes)
+
+    my_changes_description = my_changes.get_description()
 
 
     validate_src_res = pythonrc_project.validate(pythonrc_module.get_resource())
@@ -1446,7 +1369,7 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 
     ##
     input('take a moment to view the changes')
-    pydoc.pager(fn_changes_description)
+    pydoc.pager(my_changes_description)
     proceed = None
     while proceed is None:
         proceed_txt = input("perform the move? >[yes/no]>> ").strip()
@@ -1458,7 +1381,7 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
         _close()
         return
 
-    pythonrc_project.do(fn_changes)
+    pythonrc_project.do(my_changes)
 
     _close()
     return
@@ -1475,7 +1398,7 @@ def rope_move_fn_from_pythonrc(fn_name, pyutils_pkg_name):
 mv_fn = rope_move_fn_from_pythonrc
 
 
-curr_mvfn = lambda: mv_fn('view_pdb', 'bio_chem',)
+curr_mvfn = lambda: mv_fn(['xlst_to_dataframes','dataframes_to_xlst',], 'scrape',)
 
 ###
 
