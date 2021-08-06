@@ -54,29 +54,107 @@ https://github.com/qtile/qtile/blob/master/libqtile/resources/default_config.py
 
 """
 
+
 from typing import List  # noqa: F401
 
 from libqtile import bar, layout, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
+# ?? equiv?
+# from libqtile.command import lazy
 from libqtile.utils import guess_terminal
+from libqtile.command.client import CommandClient
+#
+from libqtile.dgroups import simple_key_binder
+
 
 mod = "mod4"
 terminal = guess_terminal()
 
+
+groups = [Group(i) for i in "123456789"]
+
+
+###
+# scripting starters
+#
+# ⎈⎈⎈
+#
+
+
+def cmd_client_example():
+    c = CommandClient()
+    # print(c.screen.info()["index"])
+    c.window.up_opacity()
+
+
+def spawn_two_windows():
+    """
+    wrap in `lazy.function()` to bind to keys.
+    for qtile methods:
+    http://docs.qtile.org/en/latest/manual/ref/commands.html
+    """
+    def f(qtile):
+        qtile.cmd_spawn(terminal)
+        qtile.cmd_spawn(terminal)
+
+    return f
+
+
+def qtile_group():
+    group_name = groups[5].name
+    def f(qtile):
+        try:
+            qtile.cmd_spawn('xmessage "'+str(dir(qtile))+'"')
+            qtile.cmd_spawn('xmessage "getting group"')
+            group = qtile.groupMap[group_name]
+            qtile.cmd_spawn('xmessage "have group"')
+            group.cmd_toscreen()
+        except KeyError:
+            qtile.cmd_spawn('xmessage "no group '+group+'"')
+    return f
+
+
+def spawn_startup():
+    def f(qtile):
+        qtile.current_screen.cmd_toggle_group('4')
+        qtile.cmd_spawn('urxvt')
+        qtile.current_screen.cmd_toggle_group('5')
+        qtile.cmd_spawn('urxvt')
+        qtile.current_screen.cmd_toggle_group('6')
+        qtile.cmd_spawn('urxvt')
+        qtile.current_screen.cmd_toggle_group('7')
+        qtile.cmd_spawn('urxvt')
+        qtile.current_screen.cmd_toggle_group('8')
+        qtile.cmd_spawn('chrome')
+        qtile.current_screen.cmd_toggle_group('9')
+        qtile.cmd_spawn(terminal)
+
+    return f
+
+
+
+###
+
+
+
 keys = [
-    # Switch between windows
-    Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
-    Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
-    Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
-    Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
+
+    Key([mod, "control"], "t",
+        lazy.function(spawn_startup()),
+        ),
+    Key([mod, "control"], "y",
+        lazy.function(qtile_group()),
+        ),
+
+    ###
+
     Key([mod], "space",
         #lazy.layout.next(),
         lazy.group.next_window(),
         desc="Move window focus to other window"),
-
-    Key([mod], "t", lazy.window.disable_floating(), desc="Tile the window"),
-    Key([mod], "m", lazy.window.toggle_minimize(), desc="Minimize window to TaskList widget"),
+    Key([mod], "t", lazy.window.disable_floating(), desc="tile."),
+    Key([mod], "m", lazy.window.toggle_minimize(), desc="minimize"),
     Key([mod, "control"], "8", lazy.window.down_opacity(), desc=""),
     Key([mod, "control"], "9", lazy.window.up_opacity(), desc=""),
 
@@ -120,7 +198,33 @@ keys = [
         desc="Spawn a command using a prompt widget"),
 ]
 
-groups = [Group(i) for i in "123456789"]
+
+
+
+
+###
+
+# sound_card='asfd'
+# [
+#     Key(
+#         [], "XF86AudioRaiseVolume",
+#         lazy.spawn("amixer -c %d -q set Master 2dB+" % sound_card)
+#     ),
+#     Key(
+#         [], "XF86AudioLowerVolume",
+#         lazy.spawn("amixer -c %d -q set Master 2dB-" % sound_card)
+#     ),
+#     Key(
+#         [], "XF86AudioMute",
+#         lazy.spawn("amixer -D pulse set Master toggle")
+#     ),
+# ]
+
+
+
+#####
+
+
 
 for i in groups:
     keys.extend([
