@@ -24,7 +24,7 @@ vim_style_movement_keys = [
 def investigate_names__qtile():
      icc = interactive_cmd_cli \
          = lazz  \
-             InteractiveCommandClient(
+         = InteractiveCommandClient(
              LazyCommandInterface()
          )
 
@@ -36,8 +36,9 @@ class CreateDesktops:
         "jmp", #desktop,..
         "create_window",
         ## idio[t|mas]
-        "minimize_all_windows", "modify_terminal_window",
-, "resize_window",
+        "minimize_all_windows",
+        "modify_terminal_window",
+        "resize_window",
         #..
     ]
 
