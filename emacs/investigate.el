@@ -171,3 +171,26 @@ Use this command in a compilation log buffer."
 ;;                 "(interactive) investigation with arg to interactive '%s' resulting in 2-ary function (%s) (%s)"
 ;;                 interactive-argstr arg buf))))
 ;;   )
+
+
+;;;;;;;;;;;;;;
+
+
+;;;;
+
+
+(quote "p")
+(stringp "l")
+(symbol-name 'asdf)
+(make-symbol "p")
+
+;; https://stackoverflow.com/questions/13174659/is-there-a-way-to-write-function-to-compose-functions-in-elisp
+
+(defun compose (funcs)
+  "composes several funcitons into one"
+  (lambda (arg)
+    (if funcs
+        (funcall
+         (car funcs)
+         (funcall (compose (cdr funcs)) arg))
+      arg)))
