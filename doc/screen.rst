@@ -1,6 +1,13 @@
 `screen`
 ========
 
+Used `tmux`, mostly (cf. rant in `readme.md`)
+and dithering with GNU terminal multiplexing
+lately.
+Ergonomic defaults (to/from the typist) are the
+main sell for me thus far.
+
+
 start
 -----
 `screen` (again, no args or config)

@@ -8,6 +8,59 @@ contrast with "mode" in `vim`,
 where the user is in any particular mode
 at any given time.
 
+`.emacs` freebsd copyover 210719
+--------------------------------
+
+some comments elided
+
+```
+;; must before configurations of installed packages.  ;;  If you don't want it, comment it out.
+(package-initialize)
+
+(add-hook
+ 'after-init-hook
+ (progn
+   (load-file "~/.dotfiles/emacs/sys-config.el") ;; global settings
+   (load-file "~/.dotfiles/emacs/defuns.el") ;; custom functions via M-x
+   (load-file "~/.dotfiles/emacs/keys.el"))) ;; keybindings
+
+(setq package-archives
+ '(("gnu" . "http://elpa.gnu.org/packages/")
+   ("melpa". "http://melpa.org/packages/")))
+
+;; freebsd shell (wha??)
+(normal-erase-is-backspace-mode 1)
+
+;; `customize-face` and enter 'default' to change default font size
+(custom-set-variables
+ '(package-selected-packages
+   '(yaml-mode ac-geiser w3m geiser go-mode helm cider rainbow-delimiters paredit parinfer magit clojure-mode haskell-mode)))
+(custom-set-faces
+ '(default ((t (:inherit nil :extend nil :stipple nil :background "black" :foreground "grey" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 150 :width normal :foundry "PfEd" :family "DejaVu Sans Mono"))))
+ '(fringe ((t (:background "black")))))
+```
+
+
+enable global font setting
+--------------------------
+
+_thought or thunk?_
+
+from
+
+https://www.emacswiki.org/emacs/CustomizingFaces
+
+`customize`, then
+
+```
+Faces
+    |_-> Font Lock
+        |_->  Font Lock Global Modes
+```
+
+to `Except` `Repeat` `speedbar-mode`, ... to turn on
+"Font Lock", allowing global settings
+
 
 
 abbrev-mode
@@ -147,4 +200,3 @@ conclude that DEFUN macro
    and assigns value
 2. provides the name of function
    returning Lisp_Object
-

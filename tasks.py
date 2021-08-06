@@ -149,8 +149,9 @@ def replace_string(
 
 @task
 def build_docs(c):
+    """
+    build the ReStructuredText docs in doc/
+    """
     with c.cd('doc'):
-        c.run('sphinx-build',
+        c.run('sphinx-build . _build/',
               shell='zsh',)
-        raise NotImplementedError()
-
