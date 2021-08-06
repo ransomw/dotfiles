@@ -548,150 +548,6 @@ def python_viewer_urwid(src):
     pass
 
 
-def mouse_only_ui(cmd_arg):
-    cmd = (shlex.split(cmd_arg)
-            if isinstance(cmd_arg, (str,))
-            else cmd_arg)
-    if not isinstance(cmd, (list,)):
-        raise ValueError()
-    #
-    app_state = {}
-    def stdio_reader(file_obj_name):
-        if file_obj_name not in ['stdout', 'stderr']:
-            raise ValueError()
-        proc = app_state['proc']
-        file_obj = getattr(proc, file_obj_name)
-        for line in iter((file_obj.readline
-                          if file_obj else lambda: b""), b""):
-            app_state[file_obj_name].append(
-                line.decode("utf-8"))
-
-    def on_go():
-        if 'proc' in app_state and app_state['proc'].poll() is None:
-            return
-        proc = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        app_state['proc'] = proc
-        # workaround "pipe buffer deadlock"
-        # also consider
-        # * .communicate() with a future (?)
-        # * passing a file object to stdout and stderr
-        app_state['stdout'] = []
-        app_state['stderr'] = []
-        app_state['reader_threads'] = [
-            threading.Thread(
-                target=stdio_reader,
-                args=('stdout',),
-            ),
-            threading.Thread(
-                target=stdio_reader,
-                args=('stderr',),
-            ),
-        ]
-        for t in app_state['reader_threads']:
-            t.start()
-
-    def on_stop():
-        if 'proc' not in app_state:
-            return
-        proc = app_state['proc']
-        #
-        for sig in [None, signal.SIGINT,
-                signal.SIGKILL,
-                signal.SIGTERM,]:
-            if sig is not None:
-                proc.send_signal(sig)
-            if sig is None:
-                if proc.poll() is None:
-                    continue
-                else:
-                    break
-            try:
-                if sig is not None:
-                    proc.wait(timeout=3)
-            except subprocess.TimeoutExpired as ex:
-                continue
-            break
-        else:
-            raise RuntimeError("process didn't exit")
-        #
-        for t in app_state['reader_threads']:
-            t.join()
-        if proc.poll() != 0:
-            print("error exit")
-            print("stdout")
-            print(('\n'.join(app_state['stdout'])
-                   if app_state['stdout']
-                   else "<None>"))
-            print("stderr")
-            print(('\n'.join(app_state['stderr'])
-                   if app_state['stderr']
-                   else "<None>"))
-        del app_state['proc']
-        del app_state['reader_threads']
-        del app_state['stdout']
-        del app_state['stderr']
-    ###
-    # ui
-    root = tkinter.Tk()
-    left_frame = tkinter.Frame(
-            root,
-#            relief="raised",
-#            color="#200",
-            )
-    left_frame["bg"] = "purple"
-    right_frame = tkinter.Frame(
-            root,
-            )
-    right_frame["bg"] = "pink"
-    left_frame.pack(
-            side="left",
-            fill="both",
-            anchor="center",
-            expand=True,
-            )
-    right_frame.pack(
-            side="right",
-            fill="y",
-            )
-    ##
-    # https://stackoverflow.com/questions/42579927/rounded-button-tkinter-python
-    # suggests using canvas.
-    # elsewhere suggested to use image/bitmap
-    class RoundButton(tkinter.Button, tkinter.Canvas):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # self.create_line(0, 0, 10, 10)
-            self.create_line(*self.bbox("all"))
-        #
-        def _configure(self, *args, **kwargs):
-            rv = super()._configure(*args, **kwargs)
-            breakpoint()
-            return rv
-    ##
-    go_btn = tkinter.Button(
-            left_frame,
-            text="Go!",
-            command=on_go,
-            relief="raised",
-            )
-    go_btn["bg"] = "#082"
-    stop_btn = tkinter.Button(
-            right_frame,
-            text="stop",
-            command=on_stop,
-            )
-    stop_btn["bg"] = "#086"
-    go_btn.pack(
-            side="bottom",
-            # expand=True,
-            fill="both",
-            )
-    stop_btn.pack(
-            side="top",
-            )
-    root.mainloop()
-
-
 
 def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
 
@@ -858,155 +714,14 @@ def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
 
     _close()
     return
-    fn_ast: ast.FunctionDef = astor.code_to_ast(globals()[fn_name])
-    pythonrc_ast: ast.Module = astor.code_to_ast.parse_file(
-        pythonrc_resource.real_path)
 
-    fns_changes = [_make_changeset_for_one_fn(fn_name)
-                  for fn_name in fn_names]
-    all_changes = reduce(lambda a, b: (a.add_change(b) or True) and a, fns_changes)
-
-
-
-mv_fn = rope_move_fn_from_pythonrc
 
 ###
 
-class NetmapError(Exception):
-    pass
-
-
-class NetmapParseError(ValueError, NetmapError):
-    pass
-
-
-def _get_own_ip():
-    raise NotImplementedError()
-
-
-def _is_port_open(
-        ip_addr,
-        port_no,
-) -> bool:
-    addr = (str(ip_addr), port_no,)
-    try:
-        conn = socket.create_connection(addr)
-    except ConnectionRefusedError:
-        return False
-    conn.close()
-    return True #...#
-    sock = socket.socket(
-        socket.AF_INET,
-        socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
-    sock.connect(addr)
-
-
-def _is_port_open_direct_lib(
-        ip_addr,
-        port_no,
-) -> bool:
-    addr = (str(ip_addr), port_no,)
-    try:
-        conn = socket.create_connection(addr)
-    except ConnectionRefusedError:
-        return False
-    conn.close()
-    return True #...#
-    sock = socket.socket(
-        socket.AF_INET,
-        socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
-    sock.connect(addr)
-
-
-
-def _port_scan_single_host(host, ports,
-                           scan_method='high-lvl',):
-    scan_method__create_connection = ['high-lvl', 'low-lvl',
-                           'hi', 'lo',
-                           'create_connection', 'direct_lib']
-    scan_method__direct_lib = ['high-lvl', 'low-lvl',
-                           'hi', 'lo',
-                           'create_connection', 'direct_lib']
-    assert scan_method in ['high-lvl', 'low-lvl',
-                           'hi', 'lo',
-                           'create_connection', 'direct_lib']
-    rv = {}
-    for port in ports:
-        print("scanning port", port)
-        single_port_res: bool = _is_port_open_direct_lib(host, port)
-        single_port_res: bool = _is_port_open(host, port)
-
-        rv.update({port: single_port_res})
-    return rv
-
-
-def port_scan(host_or_hosts, ports: List[int]):
-
-    def _parse_host(maybe_host):
-        try:
-            host = str(ipaddress.ip_address(str(host_or_hosts)))
-        except Exception as err:
-            breakpoint() # get exception class
-            raise NetmapParseError("", (err,))
-        return host
-
-
-    def _parse_hosts(hosts):
-        if isinstance(hosts, (list, tuple, iter)):
-            return [_parse_hosts(host)
-                    for host in hosts]
-        if isinstance(hosts, (str,)):
-            pass
-
-
-    def _coerce_ports(port_or_ports):
-        ports = None
-        if isinstance(port_or_ports, int):
-            ports = [port_or_ports]
-        if isinstance(port_or_ports, (list, tuple, set,)):
-            ports = list(port_or_ports)
-            if not all([isinstance(p, int) for p in ports]):
-                raise NetmapParseError(
-                    "recursive port coercion unimpl"
-                )
-        if ports is None:
-            raise NetmapParseError()
-        return ports
-
-
-    single_host = None
-    try:
-        single_host = _parse_host(host_or_hosts)
-    except NetmapParseError:
-        pass
-    if single_host is not None:
-        hosts = [single_host]
-    else:
-        hosts = _parse_hosts(host_or_hosts)
-    rv = {}
-    for host in hosts:
-        print("scanning host", host)
-        single_host_res = _port_scan_single_host(host,
-                                                 # ports,
-                                                 _coerce_ports(ports),
-                                                 )
-        rv.update(**{str(host): single_host_res})
-
-    breakpoint()
-
-    return rv
-
-
-def is_pastebin_up():
-    port_scan(_get_own_ip(), [5003, 5005])
-
-
-currfn = lambda: _is_port_open('192.168.1.64', 5005)
-currfn = lambda: port_scan('192.168.1.64', 5005)
 def _mount_unmounted_usb_thumb__freebsd():
     raise NotImplementedError()
 
-###
+
 
 import subprocess as sp
 def _mount_unmounted_usb_thumb():
@@ -1019,41 +734,14 @@ def _mount_unmounted_usb_thumb():
 mount_usb = lambda: _mount_unmounted_usb_thumb
 
 
-def _man_viewer__freebsd(name, sec=1):
-    raise NotImplementedError()
-
-
-def man_viewer():
-    """
-    interactive, follow links, ManManPages, ....
-    """
-    if (sp.run('uname', stdout=sp.PIPE, check=True).stdout.decode('utf-8').strip()
-        !=
-        'FreeBSD'):
-        raise NotImplementedError()
-    __man_viewer__freebsd()
-
-
 #########################################
 
 
-from time import (
-    sleep as sync_sleep,
-)
-def make_it_BEEEp():
-    def _beep_once():
-        warn("beep unimpl")
-        # terminal bell
-    while True:
-        _beep_once()
-        sync_sleep(1)
 
 
 
 currdefns = {defn.__name__: defn for defn
              in [
-                 python_viewer_urwid,
-                 make_it_BEEEp,
                  mount_usb,
                  ]}
 
