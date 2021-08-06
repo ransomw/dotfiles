@@ -45,9 +45,19 @@
 (scroll-bar-mode 0)
 (tool-bar-mode -1)
 (menu-bar-mode 0)
-(custom-set-faces
-  '(default ((t (:background "black" :foreground "grey"))))
-  '(fringe ((t (:background "black")))))
+
+;;; doc/emacs.rst
+;; (custom-set-faces
+;;   '(default ((t (:background "black" :foreground "grey"))))
+;;   '(fringe ((t (:background "black")))))
+
+;; doc/emacs.rst re. `customize` use
+(let* ((default-font-size 100)
+       (font-size default-font-size))
+  (set-face-attribute
+   'default nil :height font-size))
+
+
 
 ;; (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.js$" . js-mode))
