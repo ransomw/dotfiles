@@ -3,6 +3,7 @@ this module is used via the
 `invoke` CLI utility.
 suggested use:
   pip install invoke
+  . <(inv --print-completion-script=zsh)
   invoke --list
 and so on according to self-documenting
 interface.

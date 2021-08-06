@@ -8,3 +8,4 @@ Lés ðoþFílÉSss
    screen
    vim
    xmessage
+   freebsd_mc_av

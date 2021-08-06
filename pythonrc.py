@@ -11,7 +11,6 @@ see also:
 https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
 
 ### todo
-* refactor (using rope) into pyutil
 * conn gg Photos.
 * droplet / bucket / gcloud
   |_--< low-Trust of thumb drives AND spinning
@@ -21,12 +20,14 @@ https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP
            **after** _or_ **before**
         domain-specific stor (gg Photos)
 EO_ThHyerOrdTHOT
+* plivo (or twilio fallback) text msgs
+--
 * lint, gofmt-alike, trailing whitespace
   - pylintrc
   - pylint ASTeroid checker(s), if only for example
   - pre-commit
 * auto-generate documentation
-  - sphinx (?)
+  - sphinx -- seperate index for pyutils
   - generate todos from this markdown format
 * maintain and/or generate breakpoints list
   |_--> keep a bunch && toggle, don't waste
@@ -34,6 +35,15 @@ EO_ThHyerOrdTHOT
         -ing `breakpoint()` over && over.
   - also, cram a bunch of data into `tabulate`
     and inject a special variable into pdb.
+* tab-complete python names (w/ rope)
+  in at least one editor
+--
+* image view & editing
+  - scaled .
+* document view & editing
+  - 4-in-1 pdf
+  - pdf text extraction (non-OCR)
+--
 * music player
   - "lock" mode: only responsive on specific keypress
     ( or sequence thereof) - displaying sequnce
@@ -52,16 +62,6 @@ EO_ThHyerOrdTHOT
      over _.  same song" 19',20' phenomenon)
     (ie global annotations)
   - equalizer & effects
-* mic access
-* camera access
-* tab-complete python names (w/ rope)
-  in at least one editor
-* plivo (or twilio fallback) text msgs
-* image view & editing
-  - scaled .
-* document view & editing
-  - 4-in-1 pdf
-  - pdf text extraction (non-OCR)
 * generative music / ambient noise
   - binaural beats-type
   - bytebeat
