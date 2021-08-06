@@ -411,3 +411,7 @@ open_next_indexed_directory()
 }
 
 #####
+volume() { mixer -f /dev/mixer0 vol "$1":"$1" }
+alias x11bg_center='feh --bg-center'
+alias x11bg_tile='feh --bg-tile'
+alias x11bg='feh --bg-fill'
