@@ -79,12 +79,14 @@ EO_ThHyerOrdTHOT
 and leave this
   to   bury
 """
-
+import typing
 from typing import (
     Dict,
     List,
     Hashable,
     Tuple,
+    Union,
+    Sequence,
 )
 from collections import (
     namedtuple,
@@ -192,6 +194,8 @@ import ipaddress
 
 import rlcompleter
 import readline
+
+### END stdlib imports import stdlib
 
 readline.parse_and_bind("tab: complete")
 
@@ -315,7 +319,25 @@ run = partial(
 )
 
 
-def run_1(cmd, timeout=None, stream=sys.stdout, err_stream=sys.stderr):
+
+def run_1(cmd: Union[str, Sequence], timeout=None, stream=sys.stdout, err_stream=sys.stderr, input_str=None,):
+
+    _cmd_before_coerce = cmd #dbgref
+    if isinstance(cmd, (str,)):
+        warn("run_1 coerce untested")
+        cmd = shlex.split(cmd)
+    if not isinstance(cmd, (list,)):
+        cmd = list(cmd)
+
+
+    def input_writer(proc, input_lines):
+        for input_line in input_lines.split('\n'):
+            input_line_bytes = bytes(input_line, 'utf-8')
+            proc.stdin.writelines(
+                [input_line_bytes]
+            )
+        proc.stdin.close()
+
     def output_reader(proc):
         for line in iter((proc.stdout.readline if proc.stdout else lambda: b""), b""):
             print(line.decode("utf-8"), file=stream, end="")
@@ -328,14 +350,22 @@ def run_1(cmd, timeout=None, stream=sys.stdout, err_stream=sys.stderr):
         # todo: copyfileobj with .decode("utf-8") wrapper
         proc_strm = proc.stderr or b""
 
-    proc = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc_kwargs = {}
+    if input_str is not None:
+        proc_kwargs['stdin'] = subprocess.PIPE
+    proc = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **proc_kwargs)
     tout = threading.Thread(target=output_reader, args=(proc,))
     terr = threading.Thread(target=err_reader, args=(proc,))
+    if input_str is not None:
+        tin = threading.Thread(target=input_writer, args=(proc,input_str,))
+        tin.start()
     tout.start()
     terr.start()
     proc.wait(timeout=timeout)
     tout.join()
     terr.join()
+    if input_str is not None:
+        tin.join()
 
 
 config = configparser.ConfigParser()
@@ -404,12 +434,17 @@ class ImportBlocker(object):
 import_blocker = ImportBlocker()
 sys.meta_path.append(import_blocker)
 
+AUTO_DBG=False
+
 
 def my_except_hook(exctype, value, traceback):
     if exctype is KeyboardInterrupt:
         print("see you later!")
     sys.__excepthook__(exctype, value, traceback)
-
+    if AUTO_DBG:
+        # breakpoint()
+        import pdb
+        pdb.pm() # post-mortem
 
 def install_package(name):
     pass
@@ -502,6 +537,8 @@ while True:
         import rope.refactor.multiproject
         import rope.contrib.generate
         import astor
+
+        from libqtile import qtile
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -673,19 +710,30 @@ _TIME_ESTIMATE = {}
 
 def _espeak_text(
         text,
-        vol=9,
+        vol=85,
         disp=True,
+        async_run=False,
 ):
     if disp:
         rainbow_print(text)
-    subprocess.run(
-        ['espeak',
-         '-v', 'f4',
-         '-p', '135',
-         '-a', str(vol)
-         ],
-        input=bytes(text, 'utf-8'),
-    )
+    cmd = ['espeak',
+           '-v', 'f4',
+           '-p', '135',
+           '-a', str(vol),
+           #
+           # text,
+           ]
+    if async_run:
+        warn("async `_espeak_text` untested")
+        run_1(
+            cmd,
+            input_str=text,
+        )
+    else:
+        subprocess.run(
+            cmd,
+            input=bytes(text, 'utf-8'),
+        )
 
 
 def _xmessage_text(
@@ -1685,15 +1733,31 @@ def man_viewer():
 #########################################
 
 
+from time import (
+    sleep as sync_sleep,
+)
+def make_it_BEEEp():
+    def _beep_once():
+        warn("beep unimpl")
+        # terminal bell
+    while True:
+        _beep_once()
+        sync_sleep(1)
+
+
+
 currdefns = {defn.__name__: defn for defn
              in [
                  python_viewer_urwid,
+                 make_it_BEEEp,
+                 mount_usb,
                  ]}
+
+
 
 for varname in [
         'mv_fn',
-        '',
-        'mount_usb',]:
+        ]:
     pass
 
 
