@@ -2,6 +2,9 @@
 `qtile shell` starts an interactive interface
     to lookup qtile commands
 """
+import subprocess as subps
+import toolz.dicttoolz as dtlz
+
 from libqtile.command import lazy
 # ?? equiv?
 # from libqtile.lazy import lazy
@@ -19,6 +22,31 @@ vim_style_movement_keys = [
 ]
 
 
+
+def set_volume(vol):
+    def f(_):
+        run_res = subps.run(['mixer'], stdout=subps.PIPE, stderr=subps.PIPE,)
+        srcs_lines = [line for line in run_res.stdout.decode('utf-8').split('\n')
+         if line.startswith("Mixer ")]
+        srcs_val_strs = dict([tuple((ent for ent in
+          srcs_line.replace('Mixer', '').replace('is currently set to','').split(' ')
+          if ent))
+         for srcs_line in srcs_lines])
+        srcs_max_vals = dtlz.valmap(lambda val_str: max([int(val) for val in val_str.split(':')]),
+                                    srcs_val_strs)
+        curr_vol = srcs_max_vals['vol']
+        if vol != 0:
+             next_vol = curr_vol + vol
+        else:
+             next_vol = 0
+
+        subps.run([
+             'mixer',
+             '-f', '/dev/mixer0',
+             'vol', str(next_vol)+':'+str(next_vol)
+        ], stdout=subps.PIPE, stderr=subps.PIPE,)
+
+    return f
 
 
 def investigate_names__qtile():
