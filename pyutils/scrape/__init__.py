@@ -50,6 +50,12 @@ def pdf_to_text(filename, out=None, page=False):
     return parsed_text
 
 
+# this winds up being incorrect:
+# bytes are always in the correct order,
+# irrespective of library labels.
+# HOWEVER, a general-purpose
+#  S_n apply-cycle-notation-to-segmented-list
+# function might be useful.
 def _argb_to_rbga_bytes(argb_bytes: bytes):
     def transpose(some_bytes, ia, ib):
         byte_a = some_bytes[ia]
@@ -69,19 +75,13 @@ def _argb_to_rbga_bytes(argb_bytes: bytes):
 
 
 def pdf_4_in_1(filename, out):
-
-    if not os.path.exists(out):
-        os.mkdir(out)
-    if not os.path.isdir(out):
-        raise Exception()
-    else:
-        fnames = os.listdir(out)
-        for fname in fnames:
-            if fname.startswith('page_') and fname.endswith('.tiff'):
-                os.unlink(os.path.join(out, fname))
-
+    if not out.endswith('.pdf'):
+        out += '.pdf'
+    if os.path.exists(out):
+        raise ValueError("outfile already exists", (out,))
     doc = poppler.load_from_file(filename)
     doc_page_count = doc.pages
+    cimgs = []
     for first_pg_idx in range(doc_page_count)[::4]:
         last_pg_idx = min(doc.pages-1, first_pg_idx+3)
         pg_idxs = list(range(first_pg_idx, last_pg_idx+1))
@@ -102,10 +102,9 @@ def pdf_4_in_1(filename, out):
         pil_imgs = [
             Image.frombytes('RGBA',
                             img_dims,
-                            _argb_to_rbga_bytes(img.data),
+                            img.data,
                             )
             for img in imgs]
-
         cimg = Image.new('RGBA', (img_dims[0]*2, img_dims[1]*2))
         ###
         # 4-tuple for boxes in PIL:
@@ -123,11 +122,8 @@ def pdf_4_in_1(filename, out):
             else:
                 raise Exception()
             cimg.paste(pil_img, box=box)
-
-        outfile_idx = str(int(first_pg_idx / 4)).zfill(
-            len(str(int(math.ceil(doc_page_count / 4)))))
-        outfile_name = f'page_{outfile_idx}.tiff'
-        cimg.save(os.path.join(
-            out, outfile_name))
-
-
+        cimgs += [cimg]
+    pdf_imgs = [cimg.convert('RGB') for cimg in cimgs]
+    pdf_imgs[0].save(out,
+                     append_images=pdf_imgs[1:],
+                     save_all=True,)
