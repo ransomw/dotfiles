@@ -40,9 +40,6 @@ EO_ThHyerOrdTHOT
 --
 * image view & editing
   - scaled .
-* document view & editing
-  - 4-in-1 pdf
-  - pdf text extraction (non-OCR)
 --
 * music player
   - "lock" mode: only responsive on specific keypress
@@ -503,6 +500,7 @@ while True:
             dashbd,
         )
         from pyutils import cookbook as cb
+        from pyutils import scrape
         sys.path.pop()
 
     except ModuleNotFoundError as err:
