@@ -1,0 +1,17 @@
+<form method="post" enctype="multipart/form-data">
+	<textarea name={{text}} style="width:95vw; height:80vh;"></textarea>
+    	<p style="height:15vh;">
+    		<input type=file name={{file_name}}>
+    		<input type=submit value=PASTE>
+    	</p>
+</form>
+<h2>{{list_prefix}}pastes</h2>
+<ul>
+{% for pid in paste_ids %}
+<li>
+	<a href="{{url_for('pastebin_blueprint.look', pid=pid)}}">
+		{{pid}} - {{UUID(pid).datetime.isoformat()}}
+	</a>
+</li>
+{% endfor %}
+
