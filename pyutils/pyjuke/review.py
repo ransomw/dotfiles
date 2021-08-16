@@ -43,13 +43,27 @@ def do_concrete_review(card):
                 print("difficulty between 1, 2, or 3")
                 difficulty = None
         return difficulty
+
+    def get_correctness():
+        correctness = None
+        yes = ['yes', 'y',]
+        no = ['no', 'n']
+        valid_inputs = set(yes).union(no)
+        while correctness is None:
+            correctness_input = input('did you remember that correctly? [Y/n] >>>').lower()
+            if correctness_input not in valid_inputs:
+                continue
+            correctness = correctness_input in yes
+        return correctness
+
     #
     print("----")
-    print(card[0])
+    print(card['front'])
     print("----")
-    answer = input('> ')
-    is_correct = answer == card[1]
-    print("correct" if is_correct else "incorrect")
+    answer = input('> show reverse <')
+    print(card['back'])
+    print("----")
+    is_correct = get_correctness()
     difficulty = get_difficulty_input()
     quality = (6 if correct else 3) - difficulty
     return quality
@@ -69,7 +83,9 @@ def supermemo_review_concrete(
     while True:
         shuffle(review_cards)
         for review_card in review_cards:
+            breakpoint()
             quality = do_concrete_review(review_card)
+            breakpoint()
             review_card['reviews'].append((
                 deepcopy(review_card['reviews'][-1]).review(quality)
                 if review_card['reviews'] else

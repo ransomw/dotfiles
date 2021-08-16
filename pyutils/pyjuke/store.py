@@ -1,5 +1,7 @@
+import re
 from typing import (
     Dict,
+    List,
 )
 from tempfile import (
     gettempdir,
@@ -9,6 +11,77 @@ from warnings import (
     warn,
 )
 import pandas as pd
+import pickle
+from collections import namedtuple
+from dataclasses import dataclass
+#
+from supermemo2 import SMTwo
+
+###
+# persist as pickle
+# (current default)
+#
+
+CardFaces = namedtuple('CardFaces', ['front', 'back'])
+
+@dataclass
+class Card:
+    front: str
+    back: str
+    reviews: List[SMTwo]
+
+CARDS = []
+CARD_FILE = pth.join(pth.dirname(__file__),
+                     'CARDS.pickle')
+
+def load_cards():
+    global CARDS
+    if not CARDS and pth.exists(CARD_FILE):
+        unpickled_cards = pickle.load(CARD_FILE)
+        CARDS = unpickled_cards
+
+
+def save_cards():
+    global CARDS
+    if not CARDS:
+        return
+    pickle.dump(CARDS, CARD_FILE)
+
+
+def _card(front, back):
+    return Card(front=front,
+                 back=back,
+                 reviews=[])
+
+
+def add_new_cards(new_cards):
+    global CARDS
+    CARDS += new_cards
+    save_cards()
+    return new_cards
+
+
+def load_new_cards(card_file, delim=':', comment='#'):
+    load_cards()
+    with open(card_file) as f:
+        card_faces = [CardFaces(*[
+            lc.strip()
+            for lc in ncline.split(delim)])
+         for ncline in
+         [re.sub(r'\#.*', '', line) for line in f.readlines()
+          if ncline.strip()]]
+    new_cards = [_card(f.front, f.back) for f in card_faces]
+    return add_new_cards(new_cards)
+
+
+def add_card(front, back):
+    new_cards = [_card(front, back)]
+    return add_new_cards(new_cards)
+
+
+###
+# persist as csv
+#
 
 
 _FLASHCARD_BASE_PATH = gettempdir()

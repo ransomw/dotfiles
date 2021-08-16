@@ -75,129 +75,159 @@ from aiohttp import (
 import aiohttp_wsgi
 
 
-def pastebin_app(port=5005, run_aio_srv=True):
-    app = flask.Flask("pastebin")
 
-    pastes = {}
+pastes = {}
 
-    def heartbeat():
-        while True:
-            for pasteid in pastes:
-                if paste_time < now:
-                    pass
+def store(text, f):
+    pastes[str(uuid0.generate())] = {
+        "text": text,
+        "file": f,
+    }
 
-#    thread = threading.Thread(
+def retrieve(pid):
+    return pastes[pid]
 
-    def store(text, f):
-        pastes[str(uuid0.generate())] = {
-            "text": text,
-            "file": f,
-        }
+def paste_ids():
+    return list(pastes.keys())
 
-    def retrieve(pid):
-        return pastes[pid]
 
-    def paste_ids():
-        return list(pastes.keys())
+bp = flask.Blueprint(
+        'pastebin_blueprint',
+        __name__,
+        template_folder='templates')
 
-    @app.route("/download/<pid>/<filename>")
-    def download(pid, filename):
-        paste = retrieve(pid)
-        if filename != paste["file"]["name"]:
-            warn("url filename not equal to stored filename")
-        return flask.send_file(
-            BytesIO(paste["file"]["bytes"]),
-            attachment_filename=paste["file"]["name"],
+@bp.route("/download/<pid>/<filename>")
+def download(pid, filename):
+    paste = retrieve(pid)
+    if filename != paste["file"]["name"]:
+        warn("url filename not equal to stored filename")
+    return flask.send_file(
+        BytesIO(paste["file"]["bytes"]),
+        attachment_filename=paste["file"]["name"],
+    )
+
+
+@bp.route("/<pid>")
+def look(pid):
+    if pid == "favicon.ico":
+        return "", 404
+    paste = retrieve(pid)
+    return (
+        (
+            """
+    <h3>{time}</h3>
+    <p><pre>{text}</pre></p>
+    """
+        ).format(
+            time=uuid0.UUID(pid).datetime.isoformat(),
+            text=paste["text"],
         )
-
-    @app.route("/<pid>")
-    def look(pid):
-        if pid == "favicon.ico":
-            return "", 404
-        paste = retrieve(pid)
-        return (
+        + (
             (
                 """
-        <h3>{time}</h3>
-        <p><pre>{text}</pre></p>
-        """
+    <a href="{get}">download</a>
+    """
             ).format(
-                time=uuid0.UUID(pid).datetime.isoformat(),
-                text=paste["text"],
+                get=flask.url_for(
+                    "download",
+                    pid=pid,
+                    filename=paste["file"]["name"],
+                ),
             )
-            + (
-                (
-                    """
-        <a href="{get}">download</a>
-        """
-                ).format(
-                    get=flask.url_for(
-                        "download",
-                        pid=pid,
-                        filename=paste["file"]["name"],
-                    ),
+            if paste["file"]
+            else ""
+        )
+    )
+
+
+@bp.route("/", methods=["GET", "POST"])
+def paste():
+    text_name = "pastetext"
+    file_name = "pastefile"
+    if flask.request.method == "POST":
+        text = flask.request.form[text_name]
+        file_storage = flask.request.files[file_name]
+        file_storage.mimetype
+        file_name = file_storage.filename
+        file_bytes = file_storage.read() if file_storage.filename else None
+        store(
+            text,
+            {
+                "bytes": file_bytes,
+                "name": file_name,
+            },
+        )
+
+    return """
+    <form method="post" enctype="multipart/form-data">
+        <textarea name={text} style="width:95vw; height:80vh;"></textarea>
+        <p style="height:15vh;">
+        <input type=file name={file_name}>
+        <input type=submit value=PASTE>
+        </p>
+    </form>
+    <h2>{list_prefix}pastes</h2>
+    <ul>{paste_list}</ul>
+""".format(
+        text=text_name,
+        file_name=file_name,
+        list_prefix=("" if paste_ids() else "no "),
+        paste_list="".join(
+            [
+                """<li><a href="{url}">{pid} - {time}</a></li>""".format(
+                    url=flask.url_for("look", pid=pid),
+                    time=uuid0.UUID(pid).datetime.isoformat(),
+                    pid=pid,
                 )
-                if paste["file"]
-                else ""
+                for pid in paste_ids()
+            ]
+        ),
+    )
+
+ 
+
+def make_app():
+    app = flask.Flask("pastebin")
+
+
+    app.register_blueprint(bp)
+    return app
+
+ 
+def heartbeat():
+    while True:
+        for pasteid in pastes:
+            if paste_time < now:
+                pass
+
+
+def pastebin_app(port=5005, srv_type='werkzeug'):
+    assert srv_type in ['werkzeug', 'aio', 'stdlib']
+
+    global pastes
+    pastes = {}
+
+
+    thread = threading.Thread(
+            target=heartbeat,
+            args=(),
             )
-        )
 
-    @app.route("/", methods=["GET", "POST"])
-    def paste():
-        text_name = "pastetext"
-        file_name = "pastefile"
-        if flask.request.method == "POST":
-            text = flask.request.form[text_name]
-            file_storage = flask.request.files[file_name]
-            file_storage.mimetype
-            file_name = file_storage.filename
-            file_bytes = file_storage.read() if file_storage.filename else None
-            store(
-                text,
-                {
-                    "bytes": file_bytes,
-                    "name": file_name,
-                },
-            )
-
-        return """
-        <form method="post" enctype="multipart/form-data">
-            <textarea name={text} style="width:95vw; height:80vh;"></textarea>
-            <p style="height:15vh;">
-            <input type=file name={file_name}>
-            <input type=submit value=PASTE>
-            </p>
-        </form>
-        <h2>{list_prefix}pastes</h2>
-        <ul>{paste_list}</ul>
-    """.format(
-            text=text_name,
-            file_name=file_name,
-            list_prefix=("" if paste_ids() else "no "),
-            paste_list="".join(
-                [
-                    """<li><a href="{url}">{pid} - {time}</a></li>""".format(
-                        url=flask.url_for("look", pid=pid),
-                        time=uuid0.UUID(pid).datetime.isoformat(),
-                        pid=pid,
-                    )
-                    for pid in paste_ids()
-                ]
-            ),
-        )
-
-    if not run_aio_srv:
+    flask_app = make_app()  
+    if srv_type == 'werkzeug':
         werkzeug.serving.run_simple(
             "0.0.0.0",
             port,
-            app,
+            flask_app,
             use_debugger=True,
         )
         return
 
+    if srv_type == 'stdlib':
+        raise NotImplementedError()
+
     # todo: error on Interrupt and rerun (build event loop).
     # todo: libuv
-    flask_app = app
     loop = asyncio.get_event_loop()
     app = aioweb.Application(loop=loop)
     app.router.add_route(

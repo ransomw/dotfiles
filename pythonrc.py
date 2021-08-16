@@ -488,19 +488,16 @@ while True:
         from pyutils.file_browse import (simple_file_browser_urwid,)
         from pyutils.calendar import (ics_cal_busy_times_this_week,)
         import pyutils.pyjuke as juke
+        from pyutils.pyjuke import webapp as juke_web
+        from pyutils import pastebin 
         from pyutils.pastebin import pastebin_app
-        from pyutils.cartography.osm import (
-            osm_to_shp,
-            plot_osm_shp,
-        )
-        from pyutils.cartography.test_osm import (
-            TEST_MAP as TEST_OSM_MAP
-        )
+        from pyutils.cartography import osm
         from pyutils.py_alarm_call.dashbd import (
             dashbd,
         )
         from pyutils import cookbook as cb
         from pyutils import scrape
+        from pyutils.text_edit import urwid as te
         sys.path.pop()
 
     except ModuleNotFoundError as err:
@@ -526,9 +523,6 @@ if uninstalled_packages:
 
 ###
 
-plot_osm = plot_open_street_map_xml = compose(plot_osm_shp, osm_to_shp)
-plot_osm_demo = lambda: plot_osm(TEST_OSM_MAP)
-
 
 
 sfbrow_ur = simple_file_browser_urwid
@@ -545,7 +539,165 @@ def python_viewer_urwid(src):
     """
     pass
 
+import importlib.util
 
+
+def get_pyutils_todos():
+    wr = os.walk(os.path.dirname(pyutils.__file__))
+    wrfs = []
+    for wri in wr:
+        for wrf in wri[2]:
+            wrfs += [os.path.join(wri[0], wrf)]
+    pfs = [wrf for wrf in wrfs
+           if os.path.splitext(wrf)[1] == '.py']
+
+    def pf_2_docstring(pf):
+        pfnne = os.path.splitext(os.path.basename(pf))[0]
+        if pfnne == '__init__':
+            mod_name = os.path.split(pf)[-2]
+        if pfnne == '__main__':
+            return ""
+        else:
+            mod_name = pfnne
+        spec = importlib.util.spec_from_file_location(
+            mod_name,
+            pf)
+        foo = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(foo)
+        except exception as exc:
+            print(exc)
+            breakpoint()
+        return foo.__doc__ or ''
+
+
+    def docstring_2_todos(module_docstring):
+        dslines = module_docstring.split('\n')
+        todo_lines = []
+        in_todo = False
+        for line in dslines:
+            if line.startswith('### todo'):
+                in_todo = True
+                continue
+            if not in_todo:
+                continue
+            if line == '':
+                break
+            todo_lines += [line]
+        if not todo_lines:
+            return []
+        bullets = ['*', '-']
+        if not todo_lines[0][0] in bullets:
+            lin = todo_lines[0]
+            l0 = lin[0]
+            breakpoint()
+            raise Exception()
+        return ' '.join(todo_lines)
+        todos = []
+        curr_todo_lines = [todo_lines[0]]
+        for line in todo_lines[1:]:
+            if line[0] in bullets:
+                todos += [' '.join(curr_todo_lines)]
+                curr_todo_lines = [line]
+            else:
+                curr_todo_lines += [line]
+        return todos
+
+
+
+    assts = []
+    for pf in pfs:
+        with open(pf, 'r') as f:
+            assts += [ast.parse(f.read())]
+
+
+# spec = importlib.util.spec_from_file_location("module.name", "/path/to/file.py")
+# foo = importlib.util.module_from_spec(spec)
+# spec.loader.exec_module(foo)
+# foo.MyClass()
+
+
+    breakpoint()
+
+    bns = list(map(os.path.basename, pfs))
+    dss = []
+    for pf in pfs:
+        try:
+            ds = pf_2_docstring(pf)
+        except Exception as exc:
+            continue
+        dss += [ds]
+
+    tdaa = list(map(docstring_2_todos, dss))
+
+    todos = dict(zip(bns, tdaa))
+
+    ppp(todos)
+
+    return todos
+
+def rope_get_pyutils_todos():
+    pyutils_rootdir = pth.dirname(pyutils.__file__)
+    pythonrc_rootdir = pth.dirname(pyutils_rootdir)
+    pyutils_project = RopeProject(pyutils_rootdir)
+    pythonrc_project = RopeProject(pythonrc_rootdir)
+
+    pj = pyutils_project
+
+    breakpoint()
+
+    # x = pyutils_project
+    # y = pythonrc_project
+
+    # pyutils_python_files = pyutils_project.get_python_files()
+
+    # breakpoint()
+
+    # pyutils_modules = list(map(pyutils_project.find_module,))
+
+    pyutils_modules = thread_last(
+        pyutils_project.get_python_files(),
+        (map, lambda file: os.path.splitext(file.name)),
+        (map, get(0)),
+        (map, lambda name: (pj.find_module(name)
+                            and pj.get_module(name))),
+        (filter, lambda x: x is not None),
+        list,
+    )
+
+    x = pyutils_modules
+
+    breakpoint()
+
+    def module_to_todos(pyutils_module):
+        module_ast = pyutils_module.get_ast()
+        # filter(lambda node: isinstance  module_ast.body
+        module_docstring = pyutils_module.get_ast().get_docstring()
+        dslines = module_docstring.split('\n')
+        todo_lines = []
+        in_todo = False
+        for line in dslines:
+            if line == '### todo':
+                in_todo = true
+                continue
+            if not in_todo:
+                continue
+            if line == '':
+                break
+            todo_lines += [line]
+        assert todo_lines[0][0] == '*'
+        todos = []
+        curr_todo_lines = [todo_lines[0]]
+        for line in todo_lines[1:]:
+            if line[0] == '*':
+                todos += [curr_todo_lines.join(' ')]
+                curr_todo_lines = [line]
+            else:
+                curr_todo_lines += [line]
+        return todos
+
+    {module.name : module_name_to_todos(module)
+     for module in pyutils_modules}
 
 def rope_move_fn_from_pythonrc(fn_names, pyutils_pkg_name):
 
@@ -738,9 +890,15 @@ mount_usb = lambda: _mount_unmounted_usb_thumb
 
 
 
+
+
 currdefns = {defn.__name__: defn for defn
              in [
+                 te.demo_edit_text,
+                 osm.plot_osm_demo,
                  mount_usb,
+                 pastebin.pastebin_app,
+                 juke_web.flashcard_app,
                  ]}
 
 

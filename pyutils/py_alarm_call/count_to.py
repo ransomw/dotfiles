@@ -7,7 +7,7 @@ from collections import (
 )
 
 
-BeatWave = nt('BeatWave ', ['msg',])
+# BeatWave = nt('BeatWave ', ['msg',])
 
 NiE = NotImplementedError
 

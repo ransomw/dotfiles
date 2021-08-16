@@ -5,12 +5,12 @@ from time import sleep
 from enum import Enum
 from enum import unique
 
-from . import exc
-from . import networks_conf as nconf
-from .subps_util import run
-from .iw_data import ScanRes
-from .iw_data import ConnectRes
-from .wpa import WpaProc
+from pyutils.s_wifi import exc
+from pyutils.s_wifi import networks_conf as nconf
+from pyutils.s_wifi.subps_util import run
+from pyutils.s_wifi.iw_data import ScanRes
+from pyutils.s_wifi.iw_data import ConnectRes
+from pyutils.s_wifi.wpa import WpaProc
 
 WPA_POLL_INTERVAL = 2.0 # sec
 

@@ -21,6 +21,29 @@ import pandas as pd
 from supermemo2 import SMTwo
 from .review import *
 
+###
+#
+#
+
+from pyutils.pyjuke.review import supermemo_review_concrete
+from pyutils.pyjuke.store import (
+    CARDS,
+    load_cards,
+    save_cards,
+    load_new_cards,
+)
+
+def juke_init():
+    load_cards()
+
+def juke_review():
+    supermemo_review_concrete(CARDS)
+    save_cards()
+
+
+#
+
+
 _FLASHCARD_BASE_PATH = gettempdir()
 _FLASHCARD_CSV_DATA_PATH = pth.join(_FLASHCARD_BASE_PATH, "flashcard_data.csv")
 

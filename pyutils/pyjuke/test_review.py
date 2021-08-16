@@ -30,7 +30,8 @@ def test_one_day_review(
     )
 
     cards = [
-        {'sides': ('card-'+str(x), x),
+        {'front': 'card-'+str(x),
+         'back': str(x),
          'reviews': [],
          }
         for x in range(_MIN_QUALITY, _MAX_QUALITY)
@@ -40,6 +41,7 @@ def test_one_day_review(
 
     supermemo_review_concrete(cards, review_date=curr_sim_date)
 
+    assert len(cards) > 0
     assert 0 not in [len(c['reviews']) for c in cards]
     assert curr_sim_date not in [c['reviews'][-1] for c in cards]
 
