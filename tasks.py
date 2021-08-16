@@ -9,7 +9,7 @@ and so on according to self-documenting
 interface.
 see www.pyinvoke.org for more.
 
-todos:
+### todo
 * invoke recognizes task.py when
   cwd contains task.py.
   running invoke from other directories

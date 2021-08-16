@@ -63,8 +63,17 @@ is about the same as `tmux`.
 _???_ no numerical prefixes on `vim`-alikes
 
 
-**yank**/**copy** _todo_
+**yank**/**copy**
+* `<space>` to start and end region
+* `C-a C-]` to yank text
 
+
+sessions
+--------
+
+* `C-a d` : detach from current session
+* `screen -ls` : list all sessions
+* `screen -x <name>` : attach to named session
 
 
 Input Method
