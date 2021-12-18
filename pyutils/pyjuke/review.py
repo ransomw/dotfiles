@@ -31,7 +31,7 @@ def supermemo_review_abstract(
 def do_concrete_review(card):
     """
     """
-    def get_difficulty_input():
+    def get_difficulty_cli():
         difficulty = None
         while difficulty is None:
             difficulty_input = input('how difficult was that? [1-3, least to most] >>>')
@@ -44,7 +44,7 @@ def do_concrete_review(card):
                 difficulty = None
         return difficulty
 
-    def get_correctness():
+    def get_correctness_cli():
         correctness = None
         yes = ['yes', 'y',]
         no = ['no', 'n']
@@ -63,17 +63,38 @@ def do_concrete_review(card):
     answer = input('> show reverse <')
     print(card['back'])
     print("----")
-    is_correct = get_correctness()
-    difficulty = get_difficulty_input()
+    is_correct = get_correctness_cli()
+    difficulty = get_difficulty_cli()
     quality = (6 if correct else 3) - difficulty
     return quality
 
 
-# do_concrete_review = _do_concrete_review__println
+# f review_card['reviews'][-1].review_date == review_date:
+    next_review_cards.append(review_card)
+    do_concrete_review = _do_concrete_review__println
+
+def supermemo_review_one_card(
+        cards,
+        do_review=do_concrete_review,
+        review_date=dt.date.today(),
+):
+    review_cards = [card for card in cards
+                    if (not card['reviews'] or
+                        card['reviews'][-1].review_date <= review_date)]
+    shuffle(review_cards)
+    review_card = review_cards[0]
+    quality = do_review(review_card)
+    breakpoint()
+    review_card['reviews'].append((
+        deepcopy(review_card['reviews'][-1]).review(quality)
+        if review_card['reviews'] else
+        SMTwo.first_review(quality, review_date)
+    ))
 
 
 def supermemo_review_concrete(
         cards,
+        do_review=do_concrete_review,
         review_date=dt.date.today(),
 ):
     review_cards = [card for card in cards
@@ -84,7 +105,7 @@ def supermemo_review_concrete(
         shuffle(review_cards)
         for review_card in review_cards:
             breakpoint()
-            quality = do_concrete_review(review_card)
+            quality = do_review(review_card)
             breakpoint()
             review_card['reviews'].append((
                 deepcopy(review_card['reviews'][-1]).review(quality)
@@ -98,7 +119,7 @@ def supermemo_review_concrete(
         else:
             break
 
-    pass
+    return 
 
 
 supermemo_review = supermemo_review_concrete

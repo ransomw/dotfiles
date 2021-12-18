@@ -1,5 +1,6 @@
 """"""
 import flask
+from pyutils.pyjuke import review as jk_rev
 from pyutils.pyjuke import store as jk_stor
 from wsgiref.simple_server import make_server
 
@@ -16,9 +17,15 @@ bp = flask.Blueprint(
         template_folder='templates')
 
 
-@bp.route('/')
+@bp.route('/', methods=['GET', 'POST'])
 def home():
-    return 'hello'
+    if flask.request.method == 'POST':
+        front = flask.request.form['front']
+        back = flask.request.form['back']
+        jk_stor.add_card(front, back)
+        flask.flash("added card")
+    return render_template('home.html',
+            cards=py_stor.CARDS)
 
 
 def make_app():

@@ -84,6 +84,10 @@ def store(text, f):
         "file": f,
     }
 
+
+def message_server_desktop(text):
+    pass
+
 def retrieve(pid):
     return pastes[pid]
 

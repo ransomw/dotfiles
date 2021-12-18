@@ -28,6 +28,29 @@ from warnings import warn
 
 from invoke import task
 from invoke import exceptions as exc
+from fabric import Connection
+
+
+def _ensure_clojure(c: Connection):
+    pass
+
+def _stop_extant_todo_list_deploy(c: Connection):
+    pass
+
+
+def _ensure_git_repo(c: Connection):
+    pass
+
+
+
+def _start_todo_list_deploy(c: Connection):
+    pass
+
+
+@task
+def deploy_todo_list(ctx, host='161.35.58.205'):
+    con = Connection(host)
+    
 
 class ProgrammingError(Exception):
     pass
