@@ -10,4 +10,15 @@ Lés ðoþFílÉSss
    xmessage
    freebsd_mc_av
 
-ॐ
+ॐrignal rant
+
+.. toctree::
+   :maxdepth: 1
+
+   orig_rant
+   shell_scripts
+   mc_mime
+   lofi_email
+
+
+
