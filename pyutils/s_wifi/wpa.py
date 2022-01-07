@@ -16,7 +16,7 @@ from enum import unique
 from queue import Queue
 from threading import Thread
 
-from .subps_util import run
+from pyutils.s_wifi.subps_util import run
 
 class WpaData(dict):
     """

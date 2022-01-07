@@ -1,7 +1,7 @@
 import sys
 
-from .cli import parse_args
-from . import fn
+from pyutils.s_wifi.cli import parse_args
+from pyutils.s_wifi import fn
 
 CONN_STATE_MSGS = {
     fn.ConnState.CONNECTED: "connected",

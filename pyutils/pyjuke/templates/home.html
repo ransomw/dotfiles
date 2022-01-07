@@ -1,0 +1,23 @@
+<style>
+
+</style>
+
+
+<form action="post">
+<label>front</label>
+<input type="text"></input>
+<label>back</label>
+<input type="text"></input>
+<input type="submit" value="Add card"></input>
+</form>
+
+
+<ul>
+{% for card in cards %}
+<li><div class="front"><span>{{card.front}}</span></div><div class="back"><span>{{card.back}}</span></div><li>
+{% endfor %}
+</ul>
+
+<script type="text/javascript">
+
+</script>

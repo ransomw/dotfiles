@@ -91,6 +91,15 @@
           (end-of-buffer) (insert "\n"))
         (widen)))))
 
+
+;;;;
+;; maintain an assoc list,
+;;     name -> location
+;; setter + getter nested in "goto marker" defun
+;;
+;; ### todo
+;; * tab-complete in nested getter minibuffer
+;; *~ take naming convention more seriously
 (setq marker-names ())
 (defun set-marker-name ()
   (interactive)
@@ -239,3 +248,54 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
     (if (eq curr-js-mode 'js2-mode)
         (setf (cdr js-mode-cons-cell) 'javascript-mode)
       (setf (cdr js-mode-cons-cell) 'js2-mode))))
+
+
+;;;;
+;; with 0 prefix arg,
+;; maximize current window like `C-w _` in vim.
+;; otherwise, [todo] `enlarge window` more-or-less
+;; as usual.
+;;
+;; todo: determine idiomatic else clause for `cond`
+(defun my-enlarge-window (parg)
+  (interactive "P")
+  (let ((largest-possible-vertical-window-lines-imaginable
+         10000))
+    (if parg
+        (cond
+         ((= parg 0) (enlarge-window largest-possible-vertical-window-lines-imaginable))
+         (
+          (= 1 1)
+          ;; 't
+
+          (if 't
+              (print "nonzero ")
+              (enlarge-window arg))
+
+          ))
+      (enlarge-window 1))))
+
+
+;;;;
+;; to python-mode
+
+
+;; similar to `quote-lines`
+(defun py--vars-to-dict ()
+  (interactive)
+  ;; todo: pass `fn-name-to-key-name`, lisp unquote, apply HERE
+  (let* ((default-fn-name-to-key-name
+           (lambda (x) x)))
+    (save-excursion (replace-regexp "^ *" ""))
+    (save-excursion
+      (replace-regexp "^\\(.*\\)$"
+                      (concat "'\\1': "
+                              ;; HERE-ish : here except for the gexp.
+                              ;; may req. "totally different" method wherein all names are avail as list of strings.
+                              "\\1"
+                              ",")))
+    (beginning-of-buffer)
+    (insert "{\n")
+    (end-of-buffer)
+    (insert "}\n")))
+

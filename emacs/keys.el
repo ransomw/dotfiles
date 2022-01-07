@@ -43,5 +43,6 @@
 
 ;; (derived-mode-map-name 'python-mode)
 
+(require 'python)
 (define-key python-mode-map (kbd "M-n") 'forward-symbol)
 

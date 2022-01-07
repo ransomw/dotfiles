@@ -2,5 +2,8 @@ urxvt.font: xft:Courier New:size=15
 urxvt.scrollBar: False
 
 URxvt.depth: 32
-URxvt*background: rgba:0000/0000/0000/aaaa
+! start partially translucent
+! URxvt*background: rgba:0000/0000/0000/aaaa
+! start opaque and use qtile to change opacity
+URxvt*background: rgba:0000/0000/0000/ffff
 URxvt*foreground: White

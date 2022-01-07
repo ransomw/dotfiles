@@ -1,13 +1,17 @@
 """
-This is the short end of the stick:
+This is..
 Welcome to your very own [drumroll]
 
-Behavior Modification Stimulus Toolkit
+_Behavior Modification Stimulus Toolkit_
 
 i.e. a package designed to produce stimuli
 designed to produce behavior modification.
 
-For starters, here, you will wrap
+TBDetermined
+
+_Neural Feedback Training (NFT)_
+
+For starters, here, will wrap
 * espeak
 * xmessage
 to issue you commands according
@@ -19,6 +23,12 @@ to carry the commands.
 Most of what will interest you here
 is the data structure(s) containing
 the commands and how they are issued.
+
+Try to divide Stimuli into
+* work
+* hobby
+* break
+ ***
 """
 
 import time
@@ -36,6 +46,15 @@ import datetime as dt
 #
 # ffmpeg -i input.mp4 output.wav
 #
+
+###
+# all this is super-buggy.
+# * message timer a one-call that's-all
+# * add espeak to message time
+# * multimedia kickoffs
+# * desktop-switching...
+#   ... set a timer, run a task
+#    (where tasks are composable)
 
 
 def _desktop_message(text):
@@ -110,6 +129,4 @@ def start_timer_heartbeat():
         _timer_heartbeat_main,
     )
     __timer_heartbeat_proc.start()
-
-
 
