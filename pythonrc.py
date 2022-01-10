@@ -98,6 +98,7 @@ from functools import (
     partial,
     wraps,
 )
+import inspect
 from inspect import (
     getmembers as gm,
     getsource,

@@ -216,6 +216,13 @@ class _DASHBD_SUBPROC_GRANULARITY(enum.Enum):
 _GRAINS = _DASHBD_SUBPROC_GRANULARITY
 
 
+class _DASHBD_RUN_RES(enum.Enum):
+    BATTERY = 1
+    ALL_CLOCKS = 2
+    ECHO_AND_DATE = 3
+    # XXX
+
+
 def _freebsd_dashbd__once(
         # grain=_GRAINS.FINE,
         # grain = _GRAINS.MEDIUM,

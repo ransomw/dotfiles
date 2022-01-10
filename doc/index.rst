@@ -8,7 +8,9 @@ Lés ðoþFílÉSss
    screen
    vim
    xmessage
+   freebsd
    freebsd_mc_av
+   media
 
 ॐrignal rant
 
@@ -19,6 +21,6 @@ Lés ðoþFílÉSss
    shell_scripts
    mc_mime
    lofi_email
-
+   devils_pie
 
 

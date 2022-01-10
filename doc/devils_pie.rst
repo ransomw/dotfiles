@@ -22,43 +22,49 @@ particular desktop each time it opens.
 
 **the dotfiles**
 
-`devilspie2` is configured via an embedded
-[Lua](http://www.lua.org)
+``devilspie2`` is configured via an embedded
+`Lua <http://www.lua.org>`_
 interpreter.
-(check out
-[`lleaves`](https://github.com/ransomw/exercises/tree/master/lleaves)
+(check out |lleaves|_
 for some examples of this scripting language.)
 specifically, it's given the path of a directory as a parameter,
-and it runs every `.lua` script in that directory in [lexicographic]
+and it runs every ``.lua`` script in that directory in [lexicographic]
 order.
 
-every `.lua` script in `devilspie/scripts` is prefixed by a
-"priority", a two-digit number between `00` and `99`,
-so that for instance, `00_debug.lua` runs before any other
+.. |lleaves| replace:: ``lleaves``
+.. _lleaves: https://github.com/ransomw/exercises/tree/master/lleaves
+
+``.lua`` scripts in ``devilspie/scripts`` is prefixed by a
+"priority", a two-digit number between ``00`` and ``99``,
+so that for instance, ``00_debug.lua`` runs before any other
 Lua script.
 
-additionally, the `devilspie/run_devilspie.sh` wrapper in this
+additionally, the ``devilspie/run_devilspie.sh`` wrapper in this
 repository may be used to omit Lua scripts above a given priority.
 it creates a temporary directory,
 copies over the desired Lua scripts,
-and starts up `devilspie2`.  for instance,
+and starts up ``devilspie2``.  for instance,
 
-```shell
-run_devilspie.sh -d -p 5
-```
+.. code:: shell
+          run_devilspie.sh -d -p 5
 
-will run every script with a priority of `05` or lower
+will run every script with a priority of ``05`` or lower
 and additionally print debug information.
 
-### notes
+notes
+-----
 
 i view the notion of "priority" as something like
-[SysV init](https://en.wikipedia.org/wiki/Init#SysV-style)
-`rc`-levels.
+`SysV init <https://en.wikipedia.org/wiki/Init#SysV-style>`_
+``rc``-levels.
 although i'm not sure if it's an appropriate metaphor
 for this situtation,
 it's the hack i'm currently running with 💔.
 
-`devilspie2` depends on `glib`, which i'm not too happy about.
-[`kpie`](https://github.com/skx/kpie)
-is an alternative, but i haven't looked into it in any depth.
+``devilspie2`` depends on ``glib``, which i'm not too happy about.
+
+|kpie|_ is an alternative, but i haven't looked into it in any depth.
+
+.. |kpie| replace:: ``kpie``
+.. _kpie: https://github.com/skx/kpie
+

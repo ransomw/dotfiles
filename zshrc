@@ -363,6 +363,9 @@ if [[ -r ~/.aliasrc ]]; then
     . ~/.aliasrc
 fi
 
+if [[ -r ~/.exportrc ]]; then
+    . ~/.exportrc
+fi
 
 ## directory name shortcuts (wip)
 # hash is a zsh builtin, and -d is for directory.
