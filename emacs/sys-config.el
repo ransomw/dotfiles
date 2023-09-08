@@ -17,6 +17,9 @@
 (desktop-save-mode 1)
 ;(setq x-select-enable-clipboard nil)
 (setq x-select-enable-clipboard t)
+(setq visible-bell t)
+(setq ring-bell-function 'ignore)
+(set-face-attribute 'region nil :background "#999")
 
 (setq cider-cljs-lein-repl
       "(do (require 'figwheel-sidecar.repl-api)
@@ -53,7 +56,7 @@
 
 ;; doc/emacs.rst re. `customize` use
 (let* ((default-font-size 100)
-       (font-size default-font-size))
+       (font-size (+ 30 default-font-size)))
   (set-face-attribute
    'default nil :height font-size))
 

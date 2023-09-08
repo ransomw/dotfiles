@@ -157,9 +157,10 @@ path=(~/bin $path)
 # plan9port (Plan 9 from User Space)
 # https://9fans.github.io/plan9port/
 # cf. 9front.org (Plan 9 from Outer Space)
-export PLAN9=/usr/home/ransom/sbin/plan9
+export PLAN9=/home/ransom/sbin/plan9
 path=($path "$PLAN9/bin")
 
+path=(/usr/local/bin $path)
 
 ### language environments
 
@@ -277,6 +278,7 @@ alias mpvs='mpv --shuffle'
 # alias m='mbsync get && mutt'
 # ⛼
 
+alias godebug="dlv debug --headless --listen=:2345 --log --api-version=2 -- $@"
 
 ## imagined stuff ☺😊
 
