@@ -2,6 +2,7 @@ import re
 from typing import (
     Dict,
     List,
+    Any,
 )
 from tempfile import (
     gettempdir,
@@ -15,7 +16,8 @@ import pickle
 from collections import namedtuple
 from dataclasses import dataclass
 #
-from supermemo2 import SMTwo
+# from supermemo2 import SMTwo
+
 
 ###
 # persist as pickle
@@ -28,7 +30,8 @@ CardFaces = namedtuple('CardFaces', ['front', 'back'])
 class Card:
     front: str
     back: str
-    reviews: List[SMTwo]
+    # reviews: List[SMTwo]
+    reviews: List[Any]
 
 CARDS = []
 CARD_FILE = pth.join(pth.dirname(__file__),

@@ -18,7 +18,9 @@ from tempfile import (
 import os.path as pth
 import datetime as dt
 import pandas as pd
-from supermemo2 import SMTwo
+# 250521:untested:supermemo2 upstream updates change
+# from supermemo2 import SMT
+from supermemo2 import first_review
 from .review import *
 
 ###
@@ -226,7 +228,7 @@ def _sim_practice_flashcards():
 
     # init reviews
     for (i, card,) in enumerate(cards):
-        card['reviews'].append(SMTwo.first_review(i, first_practice_date))
+        card['reviews'].append(first_review(i, first_practice_date))
 
     def random_choice(lst):
         shuffle(lst)
@@ -260,7 +262,7 @@ def _sim_practice_flashcards():
     second_practice_date = first_practice_date + dt.timedelta(days=1)
     third_practice_date = second_practice_date + dt.timedelta(days=3)
 
-    first_reviews = [SMTwo.first_review(x, first_practice_date) for x in range(6)]
+    first_reviews = [first_review(x, first_practice_date) for x in range(6)]
     second_reviews = [
         deepcopy(first_review).review(x, second_practice_date)
         for first_review in first_reviews
@@ -321,7 +323,7 @@ def practice_flashcards():
         else:
             print("incorrect")
         difficulty = get_difficulty_input()
-        curr_card_review = SMTwo.first_review(difficulty, curr_date)
+        curr_card_review = first_review(difficulty, curr_date)
         card[2].append(curr_card_review)
 
     curr_date = second_practice_date

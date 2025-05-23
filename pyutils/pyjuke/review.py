@@ -13,7 +13,8 @@ from toolz.curried import (
 from toolz.functoolz import (
     compose,
 )
-from supermemo2 import SMTwo
+# from supermemo2 import SMTwo
+
 
 Reviewable = Any
 
@@ -88,7 +89,8 @@ def supermemo_review_one_card(
     review_card['reviews'].append((
         deepcopy(review_card['reviews'][-1]).review(quality)
         if review_card['reviews'] else
-        SMTwo.first_review(quality, review_date)
+        #SMTwo.first_review(quality, review_date)
+        first_review(quality, review_date)
     ))
 
 
@@ -110,7 +112,8 @@ def supermemo_review_concrete(
             review_card['reviews'].append((
                 deepcopy(review_card['reviews'][-1]).review(quality)
                 if review_card['reviews'] else
-                SMTwo.first_review(quality, review_date)
+                #SMTwo.first_review(quality, review_date)
+                first_review(quality, review_date)
             ))
             if review_card['reviews'][-1].review_date == review_date:
                 next_review_cards.append(review_card)

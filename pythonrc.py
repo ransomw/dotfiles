@@ -377,6 +377,15 @@ class ImportBlocker(object):
     def create_module(self, spec):
         return None
 
+ #   def find_spec(self, fullname, path, target=None):
+ #       if fullname.split(".")[0] in self.package_names:
+ #           return self
+ #       if fullname in self.module_names:
+ #           return self
+ #       return None
+
+        
+
 
 import_blocker = ImportBlocker()
 sys.meta_path.append(import_blocker)
@@ -392,10 +401,6 @@ def my_except_hook(exctype, value, traceback):
         # breakpoint()
         import pdb
         pdb.pm() # post-mortem
-
-def install_package(name):
-    pass
-
 
 sys.excepthook = my_except_hook
 
@@ -481,7 +486,7 @@ while True:
         import rope.contrib.generate
         import astor
 
-        from libqtile import qtile
+#        from libqtile import qtile
 
         sys.path.append(os.path.dirname(os.path.realpath(__file__)))
         import pyutils
@@ -491,7 +496,7 @@ while True:
         from pyutils.pyjuke import webapp as juke_web
         from pyutils import pastebin 
         from pyutils.pastebin import pastebin_app
-        from pyutils.cartography import osm
+#        from pyutils.cartography import osm
         from pyutils.py_alarm_call.dashbd import (
             dashbd,
         )
@@ -507,6 +512,7 @@ while True:
             pip_install(package_name)
         except PipInstallException as ex:
             if os.getenv("PY_DBG_IMPORTS"):
+                print(ex)
                 breakpoint()
             import_blocker.package_names.add(package_name)
         continue
@@ -895,7 +901,7 @@ mount_usb = lambda: _mount_unmounted_usb_thumb
 currdefns = {defn.__name__: defn for defn
              in [
                  te.demo_edit_text,
-                 osm.plot_osm_demo,
+                 # osm.plot_osm_demo,
                  mount_usb,
                  pastebin.pastebin_app,
                  juke_web.flashcard_app,
