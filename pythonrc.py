@@ -167,6 +167,8 @@ from tempfile import (
 
 import json
 
+import importlib.abc
+import importlib.util
 from importlib import (
     reload,
 )
@@ -358,33 +360,78 @@ if sys.prefix == sys.base_prefix:
     exit()
 
 
+
+# Gemini: You want to create a custom ModuleSpec object that, when loaded, results in an empty module namespace. This is a common pattern for "null" modules or modules that primarily serve as placeholders or trigger side effects without defining any Python objects themselves.
+
+class EmptyModuleLoader(importlib.abc.Loader):
+    """
+    A custom loader that creates a module with an empty namespace.
+    """
+    def create_module(self, spec):
+        """
+        Optional: Can return an existing module object or None to let
+        the import system create a new default module. For an empty module,
+        we usually want a new, empty module.
+        """
+        return None
+
+    def exec_module(self, module):
+        """
+        Executes the module's code. For an empty module, we do nothing here,
+        leaving the module's namespace as it was initialized (empty).
+        """
+        print(f"Executing EmptyModuleLoader for module: {module.__name__}")
+        # The module object is passed in. Its __dict__ is the namespace.
+        # We don't add anything to it, so it remains empty.
+        pass
+
+def create_empty_module_spec(module_name):
+    """
+    Creates a ModuleSpec for a module that will have an empty namespace.
+
+    Args:
+        module_name (str): The full name of the module (e.g., 'my_empty_module').
+
+    Returns:
+        importlib.machinery.ModuleSpec: The created ModuleSpec object.
+    """
+    loader = EmptyModuleLoader()
+    spec = importlib.util.spec_from_loader(module_name, loader)
+    if spec is None:
+        raise ImportError(f"Could not create spec for {module_name}")
+    return spec
+
+# /Gemini
+
+
 class ImportBlocker(object):
     def __init__(self):
         self.module_names = set()
         self.package_names = set()
-
-    def find_module(self, fullname, path=None):
+    
+    def find_spec(self, fullname, path, target=None):
         if fullname.split(".")[0] in self.package_names:
-            return self
+            return create_empty_module_spec(fullname)
         if fullname in self.module_names:
-            return self
-        return None
+            return create_empty_module_spec(fullname)
+        return None 
 
-    def exec_module(self, mdl):
-        # return an empty namespace
-        return {}
 
-    def create_module(self, spec):
-        return None
+# https://docs.python.org/3.12/reference/import.html#finders-and-loaders
+# Changed in version 3.12: find_module() has been removed. Use find_spec() instead.
+    #def find_module(self, fullname, path=None):
+    #    if fullname.split(".")[0] in self.package_names:
+    #        return self
+    #    if fullname in self.module_names:
+    #        return self
+    #    return None
 
- #   def find_spec(self, fullname, path, target=None):
- #       if fullname.split(".")[0] in self.package_names:
- #           return self
- #       if fullname in self.module_names:
- #           return self
- #       return None
+    #def exec_module(self, mdl):
+    #    # return an empty namespace
+    #    return {}
 
-        
+    #def create_module(self, spec):
+    #    return None
 
 
 import_blocker = ImportBlocker()
@@ -507,14 +554,15 @@ while True:
 
     except ModuleNotFoundError as err:
         package_name = err.name
+        package_basename = package_name.split('.')[0]
         try:
-            print("attempting to install " + package_name)
-            pip_install(package_name)
+            print("attempting to install " + package_basename)
+            pip_install(package_basename)
         except PipInstallException as ex:
             if os.getenv("PY_DBG_IMPORTS"):
                 print(ex)
                 breakpoint()
-            import_blocker.package_names.add(package_name)
+            import_blocker.package_names.add(package_basename)
         continue
     break
 

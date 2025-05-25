@@ -8,7 +8,8 @@ import openpyxl
 import openpyxl.utils.dataframe
 import pandas as pd
 import poppler
-from poppler.cpp import image as poppler_image
+# XXX sys.meta_path customization of imports doesn't block subpackages (?)
+# from poppler.cpp import image as poppler_image
 
 from PIL import (
     Image,
@@ -91,9 +92,9 @@ def pdf_4_in_1(filename, out):
         imgs = [rendr.render_page(pg) for pg in pgs]
         #
         img_formats = set([img.format for img in imgs])
-        assert img_formats == {
-            poppler_image.format_enum.argb32
-        }
+        #assert img_formats == {
+        #    poppler_image.format_enum.argb32
+        #}
         img_dims = set([(img.width, img.height) for img in imgs])
         assert len(img_dims) == 1
         img_dims = list(img_dims)[0]
