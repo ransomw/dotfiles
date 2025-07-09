@@ -7,7 +7,7 @@ import math
 import openpyxl
 import openpyxl.utils.dataframe
 import pandas as pd
-import poppler
+# import poppler
 # XXX sys.meta_path customization of imports doesn't block subpackages (?)
 # from poppler.cpp import image as poppler_image
 
@@ -34,6 +34,7 @@ def dataframes_to_xlst(dfs: Dict[str, pd.DataFrame], filepath):
 
 
 def pdf_to_text(filename, out=None, page=False):
+    raise NotImplementedError()
     doc = poppler.load_from_file(filename)
     text = ''
     for pg_idx in range(doc.pages):
@@ -76,6 +77,7 @@ def _argb_to_rbga_bytes(argb_bytes: bytes):
 
 
 def pdf_4_in_1(filename, out):
+    raise NotImplementedError()
     if not out.endswith('.pdf'):
         out += '.pdf'
     if os.path.exists(out):
