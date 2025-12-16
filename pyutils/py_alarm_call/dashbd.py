@@ -19,6 +19,7 @@ import subprocess as sp
 import shlex
 import io
 import contextlib
+from warnings import warn
 
 class ProgrammingError(Exception):
     pass
@@ -260,8 +261,8 @@ def _freebsd_dashbd__once(
         # TZ env var to date is relpath to /usr/share/zoneinfo/ -- clocks
         run_res = run_res__all_clocks = _dashbd_run(
         f"""echo 'clocks' &&\
-            echo -n "{_pm_space}LA/SF/Bonanza{_pm_space}" && TZ=America\/Los_Angeles date &&\
-            echo -n "{_pm_space}Mississippi{_pm_space}" && TZ=America\/Chicago date
+            echo -n "{_pm_space}LA/SF/Bonanza{_pm_space}" && TZ=America\\/Los_Angeles date &&\
+            echo -n "{_pm_space}Mississippi{_pm_space}" && TZ=America\\/Chicago date
         """
         )
         corse_runs_res.append(run_res)
@@ -271,8 +272,8 @@ def _freebsd_dashbd__once(
     "LA/SF/Bonanza"
     # ??? emacs python-mode "split-string"
     #  a-la paredit-mode `paredit-split-sexp`
-    {"TZ=America\/Los_Angeles"}
-    {"TZ": "America\/Los_Angeles",}
+    {"TZ=America\\/Los_Angeles"}
+    {"TZ": "America\\/Los_Angeles",}
     # .. aside END.
     # END aside.
 
@@ -283,11 +284,11 @@ def _freebsd_dashbd__once(
         for (personal_meaning, tz_envvar,) in [
                 (
                     "LA/SF/Bonanza",
-                    'America\/Los_Angeles',
+                    'America\\/Los_Angeles',
                  ),
                 (
                     "Mississippi",
-                    'America\/Chicago',
+                    'America\\/Chicago',
                 ),
     ]}
     # todo: ^/\^ to config.yaml|json|conf
@@ -600,7 +601,7 @@ def _linux_dashbd(
         _dashbd_warn(NotImplementedError())
     try:
         sp.run(
-            'watch -n 60 "acpi ; TZ=America\/Los_Angeles date"',
+            'watch -n 60 "acpi ; TZ=America\\/Los_Angeles date"',
             shell=True,
         )
     except KeyboardInterrupt:

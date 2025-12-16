@@ -66,12 +66,12 @@ EO_ThHyerOrdTHOT
 *
 ......onecet an py-chemist has
      .... <<will i want more>>
-/\//____/\/\//\\/\///\/\/\\/\//\/
-../  |   /\  |\  |> get other phone
-\/|\ |  /--\ | \ |droid (from storage)
-/\| \| /    \|  \|> install android build
-西 \ |                  on a laptop
-   \_|__            (fuschia, 茹果渴能)
+/\\//____/\\/\\//\\/\\///\\/\\/\\/\\//\\/
+../    |   /\\  |\\  |> get other phone
+\\/|\\ |  /--\\ | \\ |droid (from storage)
+/\\| \\| /    \\|  \\|> install android build
+西 \\ |                  on a laptop
+   \\_|__            (fuschia, 茹果渴能)
 
 and leave this
   to   bury
