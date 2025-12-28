@@ -15,6 +15,8 @@
 
 (add-hook 'clojure-mode-hook #'enable-paredit-mode)
 
+(setq geiser-guile-load-init-file t)
+
 ;; x-emacs config
 (setq initial-scratch-message "")
 (setq inhibit-startup-message t)
@@ -23,6 +25,8 @@
 (scroll-bar-mode 0)
 (tool-bar-mode -1)
 (menu-bar-mode 0)
+
+(add-to-list 'geiser-guile-load-path "~/ws/guile")
 
 
 (provide 'my-sys-config)
