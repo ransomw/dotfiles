@@ -24,6 +24,8 @@ from functools import (
 from operator import (
     add,
 )
+from pathlib import Path
+import datetime
 from warnings import warn
 
 from invoke import task
@@ -50,7 +52,7 @@ def _start_todo_list_deploy(c: Connection):
 @task
 def deploy_todo_list(ctx, host='161.35.58.205'):
     con = Connection(host)
-    
+
 
 class ProgrammingError(Exception):
     pass
@@ -179,3 +181,56 @@ def build_docs(c):
     with c.cd('doc'):
         c.run('sphinx-build . _build/',
               shell='zsh',)
+
+
+CONF_FILES = [
+    {"p": "zellij",
+     "f": [{"s": "zellij_config.kdl",
+            "d": "~/.config/zellij/config.kdl"}]},
+    {"p": "fish",
+     "f": [{"s": "config.fish",
+            "d": "~/.config/fish/config.fish"},
+           {"s": "fish",
+            "d": "~/.config/fish/conf.d"}]},
+    {"p": "emacs",
+     "f": [{"s": "emacs/init.el",
+            "d": "~/.emacs.d/init.el"},
+           {"s": "emacs/lisp",
+            "d": "~/.emacs.d/lisp"}]},
+]
+
+BKUP_DATE_FORMAT = "%Y%m%d-%H%M%S"
+
+def _install_conf_file(src_str, dest_str):
+    src = Path(src_str)
+    dest_unexpanded = Path(dest_str)
+    dest = dest_unexpanded.expanduser()
+    if not src.exists():
+        print(f"conf source {src_str} doesn't exist")
+        return
+    if src.samefile(dest):
+        print(f"conf file {src_str} already installed to {dest_str}")
+        return
+    if dest.exists():
+        now = datetime.datetime.now()
+        timestamp = now.strftime(BKUP_DATE_FORMAT)
+        dest_bk = dest.with_name(dest.name+'-'+timestamp+'.bk')
+        dest.rename(dest_bk)
+        print(f"created a backup of {dest_str}")
+    dest.symlink_to(src.absolute())
+    print(f"linked {dest_str} to {src_str}")
+
+
+
+@task
+def install_conf_files(c):
+    """
+    """
+    for program_data in CONF_FILES:
+        program = program_data["p"]
+        conf_files = program_data["f"]
+        if not c.run(f"which {program}"):
+            print(f"{program} not installed")
+            continue
+        for conf_file in conf_files:
+            _install_conf_file(conf_file["s"], conf_file["d"])
