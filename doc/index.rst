@@ -9,6 +9,8 @@ Lés ðoþFílÉSss
    vim
    xmessage
    freebsd_mc_av
+   fish
+   zellij
 
 ॐrignal rant
 
