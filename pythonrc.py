@@ -408,13 +408,13 @@ class ImportBlocker(object):
     def __init__(self):
         self.module_names = set()
         self.package_names = set()
-    
+
     def find_spec(self, fullname, path, target=None):
         if fullname.split(".")[0] in self.package_names:
             return create_empty_module_spec(fullname)
         if fullname in self.module_names:
             return create_empty_module_spec(fullname)
-        return None 
+        return None
 
 
 # https://docs.python.org/3.12/reference/import.html#finders-and-loaders
@@ -541,14 +541,14 @@ while True:
         from pyutils.calendar import (ics_cal_busy_times_this_week,)
         import pyutils.pyjuke as juke
         from pyutils.pyjuke import webapp as juke_web
-        from pyutils import pastebin 
+        from pyutils import pastebin
         from pyutils.pastebin import pastebin_app
 #        from pyutils.cartography import osm
         from pyutils.py_alarm_call.dashbd import (
             dashbd,
         )
+        from pyutils.py_alarm_call import simp_tbox as tbox
         from pyutils import cookbook as cb
-        from pyutils import scrape
         from pyutils.text_edit import urwid as te
         sys.path.pop()
 

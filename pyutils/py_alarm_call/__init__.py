@@ -1,34 +1,9 @@
 """
-This is..
-Welcome to your very own [drumroll]
+all manner of alarm-clock, stopwatch, and timer functions
 
-_Behavior Modification Stimulus Toolkit_
-
-i.e. a package designed to produce stimuli
-designed to produce behavior modification.
-
-TBDetermined
-
-_Neural Feedback Training (NFT)_
-
-For starters, here, will wrap
-* espeak
-* xmessage
-to issue you commands according
-to a timer and/or randomness.
-You may also want to learn
-to add text to pics or videos
-to carry the commands.
-
-Most of what will interest you here
-is the data structure(s) containing
-the commands and how they are issued.
-
-Try to divide Stimuli into
-* work
-* hobby
-* break
- ***
+real alarm-clocks include audio such as radio
+so this library includes some audio functions as well,
+notably tts usage.
 """
 
 import time

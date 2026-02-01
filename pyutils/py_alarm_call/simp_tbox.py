@@ -1,6 +1,11 @@
 """
    simple time-boxing and -estimation setup
 
+Example:
+    add_time_estimate_task('clean room', 30) # 30 mintues
+    print_time_estimates()
+    do_time_estimated_task('clean room')
+
 ### todo:
 * persistent dict (to disk)
 * calc time estimate sums
@@ -19,7 +24,7 @@ from typing import (Union, Sequence,)
 
 # activity to minutes
 _TIME_ESTIMATE = {}
-
+_PROG_BAR_STEPS = 10
 
 def rainbow_print(text):
     # Codes listed are from ECMA-48, Section 8.3.117, p. 61.
@@ -237,6 +242,7 @@ def do_time_estimated_task(
         key_or_ks = key
     #
     if isinstance(key_or_ks, (str,)):
+        warn_xm_proc = None
         key = key_or_ks
         act = key
         est_min = _TIME_ESTIMATE[key]
@@ -251,35 +257,38 @@ def do_time_estimated_task(
         if not mute:
             _espeak_text(msg_begin)
         sec_wait = float(60.*(float(est_min)-float(min_warning)))
-        PROG_BAR_STEPS = 10
-        step_sec_wait = sec_wait/float(PROG_BAR_STEPS)
-        for _ in range(PROG_BAR_STEPS):
-            # print("waiting "+str(step_sec_wait), file=sys.stderr,)
-            time.sleep(step_sec_wait)
-            print('.', end='')
-            sys.stdout.flush()
-        print()
-        msg_warn = ("you have "+str(min_warning)+" minutes left to finish "+
-                    act)
-        rainbow_print(msg_begin)
-        if not mute:
-            _espeak_text(msg_warn)
-        warn_xm_proc = _xmessage_text(msg_warn)
-        sec_wait = 60.*min_warning
-        step_sec_wait = sec_wait/float(PROG_BAR_STEPS)
-        for _ in range(PROG_BAR_STEPS):
+        if sec_wait > 0:
+            step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
+            for _ in range(_PROG_BAR_STEPS):
+                # print("waiting "+str(step_sec_wait), file=sys.stderr,)
+                time.sleep(step_sec_wait)
+                print('.', end='')
+                sys.stdout.flush()
+            print()
+            msg_warn = ("you have "+str(min_warning)+" minutes left to finish "+
+                        act)
+            rainbow_print(msg_warn)
+            if not mute:
+                _espeak_text(msg_warn)
+            warn_xm_proc = _xmessage_text(msg_warn)
+            sec_wait = 60.*min_warning
+        else:
+            sec_wait = float(60.*float(est_min))
+        step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
+        for _ in range(_PROG_BAR_STEPS):
             time.sleep(step_sec_wait)
             print('.', end='')
             sys.stdout.flush()
         print()
         msg_end = ("time's up!  your estimate of "+str(est_min)+" minutes "
                    "to completely complete "+act+" has elapsed. ")
-        rainbow_print(msg_begin)
+        rainbow_print(msg_end)
         if not mute:
             _espeak_text(msg_end)
         end_xm_proc = _xmessage_text(msg_end)
-        warn_xm_proc.terminate()
-        warn_xm_proc.wait()
+        if warn_xm_proc:
+            warn_xm_proc.terminate()
+            warn_xm_proc.wait()
         finished = None
         while finished is None:
             finished_txt = input("did you finish??? >[yes/no]>> ").strip()
@@ -309,3 +318,4 @@ def do_time_estimated_task(
             (key_or_ks, type(key_or_ks),))
 
 ##<<<##
+
