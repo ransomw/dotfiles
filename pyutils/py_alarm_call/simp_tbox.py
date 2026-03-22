@@ -252,10 +252,12 @@ def do_time_estimated_task(
             raise ValueError(
                 "nested activities unimplemented",
                 (est_min,))
-        msg_begin = "fine, take "+str(est_min)+" minutes"
+        msg_begin = "take a soft "+str(est_min)
         rainbow_print(msg_begin)
         if not mute:
-            _espeak_text(msg_begin)
+           for _ in range(3):
+                _espeak_text("Beginner's mind concerning"+act)
+                time.sleep(4)
         sec_wait = float(60.*(float(est_min)-float(min_warning)))
         if sec_wait > 0:
             step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
@@ -318,4 +320,6 @@ def do_time_estimated_task(
             (key_or_ks, type(key_or_ks),))
 
 ##<<<##
+#todo
+##playlist functionality
 
