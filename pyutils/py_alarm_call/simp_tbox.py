@@ -319,6 +319,36 @@ def do_time_estimated_task(
             "unknown activity specification",
             (key_or_ks, type(key_or_ks),))
 
+def rm_time_estimated_task(*ks):
+    key = None
+    if len(ks) == 0:
+        print("select task")
+        print(_TIME_ESTIMATE.keys())
+        while key is None:
+            perhaps_key = input(">key>")
+            if perhaps_key in _TIME_ESTIMATE:
+                key = perhaps_key
+            else:
+                print("unknown key '"+perhaps_key+"'")
+    elif len(ks) == 1:
+        key = ks[0]
+        if not isinstance(key, (str,)):
+            raise RuntimeError(
+                "keys must be strings",
+                (key, type(key),)
+            )
+    else:
+        raise ValueError(
+            "nested activities unimplemented",
+            (ks,)
+        )
+    if key is None:
+        raise RuntimeError(
+            "couldn't determine key to pop",
+            (ks,)
+        )
+    _TIME_ESTIMATE.pop(key)
+
 ##<<<##
 #todo
 ##playlist functionality
