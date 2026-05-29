@@ -211,6 +211,29 @@ def add_time_estimate_task(
             (key_or_ks, type(key_or_ks),))
 
 
+def _get_finished():
+    finished = None
+    while finished is None:
+        finished_txt = input("did you finish??? >[yes/no]>> ").strip()
+        if finished_txt not in ['yes', 'no',]:
+            print("please answer 'yes' or 'no'")
+            continue
+        finished = finished_txt == 'yes'
+    return finished
+
+
+def _handle_finished(finished, key):
+    if finished:
+        del _TIME_ESTIMATE[key]
+        # todo: pos/neg-reinforcement
+    else:
+        _TIME_ESTIMATE[key] = None
+        print("your time-estimate has been discarded.  "
+              # ^ irl stuff.
+              "to add a new estimate:")
+        print("add_time_estimate_task('"+key+"')")
+
+
 def do_time_estimated_task(
         key_or_ks=None,
         min_warning=2.,
@@ -245,7 +268,11 @@ def do_time_estimated_task(
         warn_xm_proc = None
         key = key_or_ks
         act = key
-        est_min = _TIME_ESTIMATE[key]
+        try:
+            est_min = _TIME_ESTIMATE[key]
+        except KeyError:
+            print("unknown activity '"+act+"'")
+            return
         if est_min is None:
             print("no time estimate for '"+act+"'")
         elif not isinstance(est_min, (int, float,)):
@@ -256,32 +283,40 @@ def do_time_estimated_task(
         rainbow_print(msg_begin)
         if not mute:
            for _ in range(3):
-                _espeak_text("Beginner's mind concerning"+act)
+                _espeak_text("Beginner's mind concerning "+act)
                 time.sleep(4)
         sec_wait = float(60.*(float(est_min)-float(min_warning)))
-        if sec_wait > 0:
+        try:
+            if sec_wait > 0:
+                step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
+                for _ in range(_PROG_BAR_STEPS):
+                    # print("waiting "+str(step_sec_wait), file=sys.stderr,)
+                    time.sleep(step_sec_wait)
+                    print('.', end='')
+                    sys.stdout.flush()
+                print()
+                msg_warn = ("you have "+str(min_warning)+" minutes left to finish "+
+                            act)
+                rainbow_print(msg_warn)
+                if not mute:
+                    _espeak_text(msg_warn)
+                warn_xm_proc = _xmessage_text(msg_warn)
+                sec_wait = 60.*min_warning
+            else:
+                sec_wait = float(60.*float(est_min))
             step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
             for _ in range(_PROG_BAR_STEPS):
-                # print("waiting "+str(step_sec_wait), file=sys.stderr,)
                 time.sleep(step_sec_wait)
                 print('.', end='')
                 sys.stdout.flush()
             print()
-            msg_warn = ("you have "+str(min_warning)+" minutes left to finish "+
-                        act)
-            rainbow_print(msg_warn)
-            if not mute:
-                _espeak_text(msg_warn)
-            warn_xm_proc = _xmessage_text(msg_warn)
-            sec_wait = 60.*min_warning
-        else:
-            sec_wait = float(60.*float(est_min))
-        step_sec_wait = sec_wait/float(_PROG_BAR_STEPS)
-        for _ in range(_PROG_BAR_STEPS):
-            time.sleep(step_sec_wait)
-            print('.', end='')
-            sys.stdout.flush()
-        print()
+        except KeyboardInterrupt:
+            print()
+            if warn_xm_proc:
+               warn_xm_proc.terminate()
+               warn_xm_proc.wait()
+            _handle_finished(_get_finished(), key)
+            return
         msg_end = ("time's up!  your estimate of "+str(est_min)+" minutes "
                    "to completely complete "+act+" has elapsed. ")
         rainbow_print(msg_end)
@@ -291,24 +326,10 @@ def do_time_estimated_task(
         if warn_xm_proc:
             warn_xm_proc.terminate()
             warn_xm_proc.wait()
-        finished = None
-        while finished is None:
-            finished_txt = input("did you finish??? >[yes/no]>> ").strip()
-            if finished_txt not in ['yes', 'no',]:
-                print("please answer 'yes' or 'no'")
-                continue
-            finished = finished_txt == 'yes'
+        finished = _get_finished()
         end_xm_proc.terminate()
         end_xm_proc.wait()
-        if finished:
-            del _TIME_ESTIMATE[key]
-            # todo: pos/neg-reinforcement
-        else:
-            _TIME_ESTIMATE[key] = None
-            print("your time-estimate has been discarded.  "
-                  # ^ irl stuff.
-                  "to add a new estimate:")
-            print("add_time_estimate_task('"+key+"')")
+        _handle_finished(finished, key)
     elif isinstance(key_or_ks, (list,)):
         ks = key_or_ks
         raise ValueError(
@@ -347,7 +368,13 @@ def rm_time_estimated_task(*ks):
             "couldn't determine key to pop",
             (ks,)
         )
-    _TIME_ESTIMATE.pop(key)
+    del _TIME_ESTIMATE[key]
+
+
+def rm_all_time_estimated_tasks():
+    for key in _TIME_ESTIMATE.keys():
+        del _TIME_ESTIMATE[key]
+
 
 ##<<<##
 #todo
