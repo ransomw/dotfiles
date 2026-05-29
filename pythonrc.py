@@ -194,6 +194,8 @@ import ipaddress
 import rlcompleter
 import readline
 
+import traceback
+
 ### END stdlib imports import stdlib
 
 readline.parse_and_bind("tab: complete")
@@ -380,7 +382,7 @@ class EmptyModuleLoader(importlib.abc.Loader):
         Executes the module's code. For an empty module, we do nothing here,
         leaving the module's namespace as it was initialized (empty).
         """
-        print(f"Executing EmptyModuleLoader for module: {module.__name__}")
+        # print(f"Executing EmptyModuleLoader for module: {module.__name__}")
         # The module object is passed in. Its __dict__ is the namespace.
         # We don't add anything to it, so it remains empty.
         pass
@@ -410,7 +412,8 @@ class ImportBlocker(object):
         self.package_names = set()
 
     def find_spec(self, fullname, path, target=None):
-        if fullname.split(".")[0] in self.package_names:
+        package_name = fullname.split(".")[0]
+        if package_name in self.package_names:
             return create_empty_module_spec(fullname)
         if fullname in self.module_names:
             return create_empty_module_spec(fullname)
@@ -550,9 +553,11 @@ while True:
         from pyutils.py_alarm_call import simp_tbox as tbox
         from pyutils import cookbook as cb
         from pyutils.text_edit import urwid as te
+        from pyutils import cloud_sync
         sys.path.pop()
 
     except ModuleNotFoundError as err:
+        tb = traceback.extract_tb(sys.exc_info()[2])
         package_name = err.name
         package_basename = package_name.split('.')[0]
         try:
@@ -562,8 +567,15 @@ while True:
             if os.getenv("PY_DBG_IMPORTS"):
                 print(ex)
                 breakpoint()
+            if ex.args[0] == 'unknown package':
+                print(f"add {ex.args[1][0]} to python.conf")
             import_blocker.package_names.add(package_basename)
         continue
+    except ImportError as err:
+        if os.getenv("PY_DBG_IMPORTS"):
+            x = err
+            breakpoint()
+        pass
     break
 
 
