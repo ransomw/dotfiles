@@ -143,7 +143,7 @@ def _espeak_text(
     if disp:
         rainbow_print(text)
     cmd = ['espeak',
-           '-v', 'f4',
+           '-v', 'en+f4',
            '-p', '135',
            '-a', str(vol),
            ]
