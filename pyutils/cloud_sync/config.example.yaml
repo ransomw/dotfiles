@@ -1,0 +1,12 @@
+repos:
+  - name: some-name
+    local: /path/to/dir
+    remote: bucket-name
+    ignore:
+      - '*.aux'
+      - Screenshots/
+remote-account:
+  account-id: xxx
+  access-key-id: xxx
+  secret-access-key: xxx
+metadata-bucket: sync-meta
