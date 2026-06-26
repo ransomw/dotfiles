@@ -27,3 +27,7 @@ The Python monorepo started in 2021 consists of
 
 Functionality in `pyutils` is exposed through the configuration in `pythonrc.py`.  As of _Feb 1, 2026_, there is no documentation other than the source.
 
+### Clojure monorepo
+
+`cljutils$ clj -M:repl`
+
