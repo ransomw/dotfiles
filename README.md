@@ -29,5 +29,5 @@ Functionality in `pyutils` is exposed through the configuration in `pythonrc.py`
 
 ### Clojure monorepo
 
-`cljutils$ clj -M:repl`
+`cljutils$ clj -M:rebel`
 

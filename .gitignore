@@ -11,6 +11,8 @@ __pycache__/
 cljutils/.cpcache/
 cljutils/finance.db
 
+.rebel_readline_history
+
 .ropeproject/
 
 *.swp
